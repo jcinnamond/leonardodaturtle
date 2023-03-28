@@ -1228,7 +1228,7 @@
     return function(s) {
       return function __do3() {
         var v = value11(doc.output)();
-        return setValue11(s + ("\n" + v))(doc.output)();
+        return setValue11(v + ("\n" + s))(doc.output)();
       };
     };
   };

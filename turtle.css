@@ -1,7 +1,12 @@
 html,
 body {
     height: 100%;
-    font-family: sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+label {
+    display: block;
 }
 
 .flex-container {
@@ -17,10 +22,21 @@ body {
 
 .sidebar {
     margin: 10px;
-    flex-basis: 200px;
+    flex-basis: 500px;
 }
 
 .commands {
     width: 100%;
     margin-bottom: 1em;
+}
+
+#command,
+.output {
+    padding: 5px;
+    min-width: 250px;
+    width: 90%;
+}
+
+.output {
+    resize: none;
 }

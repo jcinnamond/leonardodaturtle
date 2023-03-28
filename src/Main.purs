@@ -167,7 +167,7 @@ error = log
 output :: Doc -> String -> Effect Unit
 output doc s = do
   v <- TextAreaElement.value doc.output
-  TextAreaElement.setValue (s <> "\n" <> v) doc.output
+  TextAreaElement.setValue (v <> "\n" <> s) doc.output
 
 handleCommand :: Ref World -> Doc -> Event -> Effect Unit
 handleCommand wr doc _ = do
