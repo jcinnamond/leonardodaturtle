@@ -12,13 +12,14 @@
         <canvas id="canvas" class="canvas"></canvas>
         <div class="sidebar">
             <div class="commands">
-                <div id="output" class="output">
-                </div>
                 <form action="#" id="command-form" class="input">
                     <label for="command">Enter your command</label>
                     <input type="text" id="command" autofocus />
                 </form>
             </div>
+            <h>Command history</h>
+            <textarea id="output" class="output" readonly>
+            </textarea>
         </div>
     </div>
     <script type="text/javascript" src="index.js"></script>

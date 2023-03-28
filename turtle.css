@@ -1,6 +1,7 @@
 html,
 body {
     height: 100%;
+    font-family: sans-serif;
 }
 
 .flex-container {
@@ -17,4 +18,9 @@ body {
 .sidebar {
     margin: 10px;
     flex-basis: 200px;
+}
+
+.commands {
+    width: 100%;
+    margin-bottom: 1em;
 }

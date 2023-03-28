@@ -18,14 +18,17 @@ import Web.DOM.Element (clientHeight, clientWidth, toEventTarget)
 import Web.DOM.NonElementParentNode (getElementById)
 import Web.Event.Event (Event, EventType(..))
 import Web.Event.EventTarget (addEventListener, eventListener)
-import Web.HTML (HTMLInputElement, window)
+import Web.HTML (HTMLInputElement, HTMLTextAreaElement, window)
 import Web.HTML.HTMLDocument (toNonElementParentNode)
-import Web.HTML.HTMLInputElement (fromElement, setValue, value)
+import Web.HTML.HTMLInputElement (setValue, value)
+import Web.HTML.HTMLInputElement as InputElement
+import Web.HTML.HTMLTextAreaElement as TextAreaElement
 import Web.HTML.Window (document)
 
 type Doc
   = { form :: Element
     , input :: HTMLInputElement
+    , output :: HTMLTextAreaElement
     , canvas :: CanvasElement
     , canvasCtx :: Context2D
     }
@@ -118,26 +121,34 @@ render doc w = do
       setFillStyle doc.canvasCtx w.bg
       fillRect doc.canvasCtx { x: 0.0, y: 0.0, width: width, height: height }
 
-leftCommand :: World -> String -> Effect World
-leftCommand w s = do
+leftCommand :: Doc -> World -> String -> Effect World
+leftCommand doc w s = do
   case fromString s of
     Nothing -> error "expected number when turning left" *> pure w
-    Just n -> turn w (n * -1.0)
+    Just n -> do
+      output doc $ "left " <> show n
+      turn w (n * -1.0)
 
-rightCommand :: World -> String -> Effect World
-rightCommand w s = do
+rightCommand :: Doc -> World -> String -> Effect World
+rightCommand doc w s = do
   case fromString s of
     Nothing -> error "expected number when turning right" *> pure w
-    Just n -> turn w n
+    Just n -> do
+      output doc $ "right " <> show n
+      turn w n
 
-moveCommand :: World -> String -> Effect World
-moveCommand w s = do
+moveCommand :: Doc -> World -> String -> Effect World
+moveCommand doc w s = do
   case fromString s of
     Nothing -> error "expected number when moving" *> pure w
-    Just n -> moveTurtle w n
+    Just n -> do
+      output doc $ "move " <> show n
+      moveTurtle w n
 
 clearCommand :: Doc -> Effect World
-clearCommand doc = initialWorld doc
+clearCommand doc = do
+  output doc "clear"
+  initialWorld doc
 
 showCommand :: World -> Effect World
 showCommand w = pure $ w { turtle = w.turtle { visible = true } }
@@ -145,37 +156,45 @@ showCommand w = pure $ w { turtle = w.turtle { visible = true } }
 hideCommand :: World -> Effect World
 hideCommand w = pure $ w { turtle = w.turtle { visible = false } }
 
-bgCommand :: World -> String -> Effect World
-bgCommand w bg = pure $ w { bg = bg }
+bgCommand :: Doc -> World -> String -> Effect World
+bgCommand doc w bg = do
+  output doc $ "bg " <> bg
+  pure $ w { bg = bg }
 
 error :: String -> Effect Unit
 error = log
+
+output :: Doc -> String -> Effect Unit
+output doc s = do
+  v <- TextAreaElement.value doc.output
+  TextAreaElement.setValue (s <> "\n" <> v) doc.output
 
 handleCommand :: Ref World -> Doc -> Event -> Effect Unit
 handleCommand wr doc _ = do
   v <- value doc.input
   setValue "" doc.input
-  w' <- eval (fromFoldable $ words v) =<< Ref.read wr
+  w' <- eval doc (fromFoldable $ words v) =<< Ref.read wr
   Ref.write w' wr
   render doc w'
 
-eval :: List String -> World -> Effect World
-eval Nil w = pure w
+eval :: Doc -> List String -> World -> Effect World
+eval _ Nil w = pure w
 
-eval ("move" : distance : ss) w = moveCommand w distance >>= eval ss
+eval doc ("move" : distance : ss) w = moveCommand doc w distance >>= eval doc ss
 
-eval ("left" : angle : ss) w = leftCommand w angle >>= eval ss
+eval doc ("left" : angle : ss) w = leftCommand doc w angle >>= eval doc ss
 
-eval ("right" : angle : ss) w = rightCommand w angle >>= eval ss
+eval doc ("right" : angle : ss) w = rightCommand doc w angle >>= eval doc ss
 
--- eval ("clear" : ss) _ = clearCommand >>= eval ss
-eval ("hide" : ss) w = hideCommand w >>= eval ss
+eval doc ("clear" : ss) _ = clearCommand doc >>= eval doc ss
 
-eval ("show" : ss) w = showCommand w >>= eval ss
+eval doc ("hide" : ss) w = hideCommand w >>= eval doc ss
 
-eval ("bg" : color : ss) w = bgCommand w color >>= eval ss
+eval doc ("show" : ss) w = showCommand w >>= eval doc ss
 
-eval ss w = (error $ "unrecognised command " <> show ss) *> pure w
+eval doc ("bg" : color : ss) w = bgCommand doc w color >>= eval doc ss
+
+eval _ ss w = (error $ "unrecognised command " <> show ss) *> pure w
 
 listenToCommands :: Ref.Ref World -> Doc -> Effect Unit
 listenToCommands tr doc = do
@@ -187,8 +206,12 @@ setupDoc = do
   doc <- toNonElementParentNode <$> (document =<< window)
   form <- mustFindElem "command-form" doc
   inputElem <- mustFindElem "command" doc
-  input <- case fromElement inputElem of
+  input <- case InputElement.fromElement inputElem of
     Nothing -> throw "cannot get HTML Input Element"
+    Just e -> pure e
+  outputElem <- mustFindElem "output" doc
+  out <- case TextAreaElement.fromElement outputElem of
+    Nothing -> throw "cannot get HTML Output Element"
     Just e -> pure e
   maybeCanvas <- getCanvasElementById "canvas"
   canvas <- case maybeCanvas of
@@ -198,6 +221,7 @@ setupDoc = do
   pure
     $ { form: form
       , input: input
+      , output: out
       , canvas: canvas
       , canvasCtx: ctx
       }

@@ -217,6 +217,10 @@
   var bottomNumber = Number.NEGATIVE_INFINITY;
 
   // output/Data.Show/foreign.js
+  var showNumberImpl = function(n) {
+    var str = n.toString();
+    return isNaN(str + ".0") ? str : str + ".0";
+  };
   var showStringImpl = function(s) {
     var l = s.length;
     return '"' + s.replace(
@@ -252,6 +256,9 @@
   // output/Data.Show/index.js
   var showString = {
     show: showStringImpl
+  };
+  var showNumber = {
+    show: showNumberImpl
   };
   var show = function(dict) {
     return dict.show;
@@ -1151,6 +1158,23 @@
   // output/Web.HTML.HTMLInputElement/index.js
   var fromElement = /* @__PURE__ */ unsafeReadProtoTagged("HTMLInputElement");
 
+  // output/Web.HTML.HTMLTextAreaElement/foreign.js
+  function value11(textarea) {
+    return function() {
+      return textarea.value;
+    };
+  }
+  function setValue11(value12) {
+    return function(textarea) {
+      return function() {
+        textarea.value = value12;
+      };
+    };
+  }
+
+  // output/Web.HTML.HTMLTextAreaElement/index.js
+  var fromElement2 = /* @__PURE__ */ unsafeReadProtoTagged("HTMLTextAreaElement");
+
   // output/Web.HTML.Window/foreign.js
   function document2(window2) {
     return function() {
@@ -1164,8 +1188,9 @@
   var map4 = /* @__PURE__ */ map(functorEffect);
   var bindFlipped2 = /* @__PURE__ */ bindFlipped(bindEffect);
   var applySecond2 = /* @__PURE__ */ applySecond(applyEffect);
+  var show2 = /* @__PURE__ */ show(showNumber);
   var traverse_2 = /* @__PURE__ */ traverse_(applicativeEffect)(foldableArray);
-  var show2 = /* @__PURE__ */ show(/* @__PURE__ */ showList(showString));
+  var show1 = /* @__PURE__ */ show(/* @__PURE__ */ showList(showString));
   var fromFoldable2 = /* @__PURE__ */ fromFoldable(foldableArray);
   var showCommand = function(w) {
     return pure2({
@@ -1199,6 +1224,14 @@
       });
     };
   };
+  var output = function(doc) {
+    return function(s) {
+      return function __do3() {
+        var v = value11(doc.output)();
+        return setValue11(s + ("\n" + v))(doc.output)();
+      };
+    };
+  };
   var newPos = function(v) {
     return function(angle) {
       return function(len) {
@@ -1223,7 +1256,7 @@
           return maybeElem.value0;
         }
         ;
-        throw new Error("Failed pattern match at Main (line 208, column 3 - line 210, column 21): " + [maybeElem.constructor.name]);
+        throw new Error("Failed pattern match at Main (line 232, column 3 - line 234, column 21): " + [maybeElem.constructor.name]);
       };
     };
   };
@@ -1252,7 +1285,20 @@
         return v.value0;
       }
       ;
-      throw new Error("Failed pattern match at Main (line 190, column 12 - line 192, column 21): " + [v.constructor.name]);
+      throw new Error("Failed pattern match at Main (line 209, column 12 - line 211, column 21): " + [v.constructor.name]);
+    }();
+    var outputElem = mustFindElem("output")(doc)();
+    var out = function() {
+      var v = fromElement2(outputElem);
+      if (v instanceof Nothing) {
+        return $$throw("cannot get HTML Output Element")();
+      }
+      ;
+      if (v instanceof Just) {
+        return v.value0;
+      }
+      ;
+      throw new Error("Failed pattern match at Main (line 213, column 10 - line 215, column 21): " + [v.constructor.name]);
     }();
     var maybeCanvas = getCanvasElementById("canvas")();
     var canvas = function() {
@@ -1264,12 +1310,13 @@
         return maybeCanvas.value0;
       }
       ;
-      throw new Error("Failed pattern match at Main (line 194, column 13 - line 196, column 21): " + [maybeCanvas.constructor.name]);
+      throw new Error("Failed pattern match at Main (line 217, column 13 - line 219, column 21): " + [maybeCanvas.constructor.name]);
     }();
     var ctx = getContext2D(canvas)();
     return {
       form,
       input,
+      output: out,
       canvas,
       canvasCtx: ctx
     };
@@ -1340,46 +1387,61 @@
     });
   };
   var error3 = log2;
-  var leftCommand = function(w) {
-    return function(s) {
-      var v = fromString(s);
-      if (v instanceof Nothing) {
-        return applySecond2(error3("expected number when turning left"))(pure2(w));
-      }
-      ;
-      if (v instanceof Just) {
-        return turn(w)(v.value0 * -1);
-      }
-      ;
-      throw new Error("Failed pattern match at Main (line 123, column 3 - line 125, column 32): " + [v.constructor.name]);
+  var leftCommand = function(doc) {
+    return function(w) {
+      return function(s) {
+        var v = fromString(s);
+        if (v instanceof Nothing) {
+          return applySecond2(error3("expected number when turning left"))(pure2(w));
+        }
+        ;
+        if (v instanceof Just) {
+          return function __do3() {
+            output(doc)("left " + show2(v.value0))();
+            return turn(w)(v.value0 * -1)();
+          };
+        }
+        ;
+        throw new Error("Failed pattern match at Main (line 126, column 3 - line 130, column 24): " + [v.constructor.name]);
+      };
     };
   };
-  var moveCommand = function(w) {
-    return function(s) {
-      var v = fromString(s);
-      if (v instanceof Nothing) {
-        return applySecond2(error3("expected number when moving"))(pure2(w));
-      }
-      ;
-      if (v instanceof Just) {
-        return moveTurtle(w)(v.value0);
-      }
-      ;
-      throw new Error("Failed pattern match at Main (line 135, column 3 - line 137, column 29): " + [v.constructor.name]);
+  var moveCommand = function(doc) {
+    return function(w) {
+      return function(s) {
+        var v = fromString(s);
+        if (v instanceof Nothing) {
+          return applySecond2(error3("expected number when moving"))(pure2(w));
+        }
+        ;
+        if (v instanceof Just) {
+          return function __do3() {
+            output(doc)("move " + show2(v.value0))();
+            return moveTurtle(w)(v.value0)();
+          };
+        }
+        ;
+        throw new Error("Failed pattern match at Main (line 142, column 3 - line 146, column 21): " + [v.constructor.name]);
+      };
     };
   };
-  var rightCommand = function(w) {
-    return function(s) {
-      var v = fromString(s);
-      if (v instanceof Nothing) {
-        return applySecond2(error3("expected number when turning right"))(pure2(w));
-      }
-      ;
-      if (v instanceof Just) {
-        return turn(w)(v.value0);
-      }
-      ;
-      throw new Error("Failed pattern match at Main (line 129, column 3 - line 131, column 23): " + [v.constructor.name]);
+  var rightCommand = function(doc) {
+    return function(w) {
+      return function(s) {
+        var v = fromString(s);
+        if (v instanceof Nothing) {
+          return applySecond2(error3("expected number when turning right"))(pure2(w));
+        }
+        ;
+        if (v instanceof Just) {
+          return function __do3() {
+            output(doc)("right " + show2(v.value0))();
+            return turn(w)(v.value0)();
+          };
+        }
+        ;
+        throw new Error("Failed pattern match at Main (line 134, column 3 - line 138, column 15): " + [v.constructor.name]);
+      };
     };
   };
   var drawTurtle = function(v) {
@@ -1440,46 +1502,63 @@
       };
     };
   };
-  var bgCommand = function(w) {
-    return function(bg) {
-      return pure2({
-        bg,
-        lines: w.lines,
-        turtle: w.turtle
-      });
+  var clearCommand = function(doc) {
+    return function __do3() {
+      output(doc)("clear")();
+      return initialWorld(doc)();
+    };
+  };
+  var bgCommand = function(doc) {
+    return function(w) {
+      return function(bg) {
+        return function __do3() {
+          output(doc)("bg " + bg)();
+          return {
+            bg,
+            lines: w.lines,
+            turtle: w.turtle
+          };
+        };
+      };
     };
   };
   var $$eval = function(v) {
     return function(v1) {
-      if (v instanceof Nil) {
-        return pure2(v1);
-      }
-      ;
-      if (v instanceof Cons && (v.value0 === "move" && v.value1 instanceof Cons)) {
-        return bind2(moveCommand(v1)(v.value1.value0))($$eval(v.value1.value1));
-      }
-      ;
-      if (v instanceof Cons && (v.value0 === "left" && v.value1 instanceof Cons)) {
-        return bind2(leftCommand(v1)(v.value1.value0))($$eval(v.value1.value1));
-      }
-      ;
-      if (v instanceof Cons && (v.value0 === "right" && v.value1 instanceof Cons)) {
-        return bind2(rightCommand(v1)(v.value1.value0))($$eval(v.value1.value1));
-      }
-      ;
-      if (v instanceof Cons && v.value0 === "hide") {
-        return bind2(hideCommand(v1))($$eval(v.value1));
-      }
-      ;
-      if (v instanceof Cons && v.value0 === "show") {
-        return bind2(showCommand(v1))($$eval(v.value1));
-      }
-      ;
-      if (v instanceof Cons && (v.value0 === "bg" && v.value1 instanceof Cons)) {
-        return bind2(bgCommand(v1)(v.value1.value0))($$eval(v.value1.value1));
-      }
-      ;
-      return applySecond2(error3("unrecognised command " + show2(v)))(pure2(v1));
+      return function(v2) {
+        if (v1 instanceof Nil) {
+          return pure2(v2);
+        }
+        ;
+        if (v1 instanceof Cons && (v1.value0 === "move" && v1.value1 instanceof Cons)) {
+          return bind2(moveCommand(v)(v2)(v1.value1.value0))($$eval(v)(v1.value1.value1));
+        }
+        ;
+        if (v1 instanceof Cons && (v1.value0 === "left" && v1.value1 instanceof Cons)) {
+          return bind2(leftCommand(v)(v2)(v1.value1.value0))($$eval(v)(v1.value1.value1));
+        }
+        ;
+        if (v1 instanceof Cons && (v1.value0 === "right" && v1.value1 instanceof Cons)) {
+          return bind2(rightCommand(v)(v2)(v1.value1.value0))($$eval(v)(v1.value1.value1));
+        }
+        ;
+        if (v1 instanceof Cons && v1.value0 === "clear") {
+          return bind2(clearCommand(v))($$eval(v)(v1.value1));
+        }
+        ;
+        if (v1 instanceof Cons && v1.value0 === "hide") {
+          return bind2(hideCommand(v2))($$eval(v)(v1.value1));
+        }
+        ;
+        if (v1 instanceof Cons && v1.value0 === "show") {
+          return bind2(showCommand(v2))($$eval(v)(v1.value1));
+        }
+        ;
+        if (v1 instanceof Cons && (v1.value0 === "bg" && v1.value1 instanceof Cons)) {
+          return bind2(bgCommand(v)(v2)(v1.value1.value0))($$eval(v)(v1.value1.value1));
+        }
+        ;
+        return applySecond2(error3("unrecognised command " + show1(v1)))(pure2(v2));
+      };
     };
   };
   var handleCommand = function(wr) {
@@ -1488,7 +1567,7 @@
         return function __do3() {
           var v1 = value3(doc.input)();
           setValue3("")(doc.input)();
-          var w$prime = bindFlipped2($$eval(fromFoldable2(words(v1))))(read(wr))();
+          var w$prime = bindFlipped2($$eval(doc)(fromFoldable2(words(v1))))(read(wr))();
           write(w$prime)(wr)();
           return render(doc)(w$prime)();
         };
