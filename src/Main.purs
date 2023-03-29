@@ -50,6 +50,7 @@ type Turtle
   = { position :: Point
     , angle :: Number -- in radians
     , visible :: Boolean
+    , drawing :: Boolean
     }
 
 type Point
@@ -83,14 +84,16 @@ moveTurtle w n =
   pure
     w
       { turtle = move w.turtle n
-      , lines = addLine w.lines w.turtle.position w.turtle.angle n
+      , lines = addLine w.lines w.turtle n
       }
   where
   move :: Turtle -> Number -> Turtle
   move t distance = t { position = newPos t.position t.angle distance }
 
-  addLine :: Array Line -> Point -> Number -> Number -> Array Line
-  addLine ls from angle distance = snoc ls { from: from, to: newPos from angle distance }
+  addLine :: Array Line -> Turtle -> Number -> Array Line
+  addLine ls { position, angle, drawing } distance
+    | drawing = snoc ls { from: position, to: newPos position angle distance }
+    | otherwise = ls
 
 newPos :: Point -> Number -> Number -> Point
 newPos { x, y } angle len = { x: x', y: y' }
@@ -170,6 +173,10 @@ eval _ Show w = pure $ setVisible w true
 
 eval _ Hide w = pure $ setVisible w false
 
+eval _ PenUp w = pure $ w { turtle { drawing = false } }
+
+eval _ PenDown w = pure $ w { turtle { drawing = true } }
+
 eval doc (Repeat c exprs) w = evalRepeatedly c doc exprs w
 
 evalRepeatedly :: Int -> Doc -> List Expr -> World -> Effect World
@@ -218,7 +225,7 @@ initialTurtle :: CanvasElement -> Effect Turtle
 initialTurtle canvas = do
   width <- getCanvasWidth canvas
   height <- getCanvasHeight canvas
-  pure { position: { x: width / 2.0, y: height / 2.0 }, angle: 0.0, visible: true }
+  pure { position: { x: width / 2.0, y: height / 2.0 }, angle: 0.0, visible: true, drawing: true }
 
 initialWorld :: Doc -> Effect World
 initialWorld doc = do

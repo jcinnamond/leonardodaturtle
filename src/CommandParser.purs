@@ -28,6 +28,8 @@ data Expr
   | Show
   | Background String
   | Repeat Int (List Expr)
+  | PenUp
+  | PenDown
 
 instance showExpr :: Show Expr where
   show (Forward x) = "forward " <> show x
@@ -37,6 +39,8 @@ instance showExpr :: Show Expr where
   show Clear = "clear"
   show Hide = "hide"
   show Show = "show"
+  show PenUp = "penup"
+  show PenDown = "pendown"
   show (Repeat x es) = "repeat " <> show x <> " [" <> joinExprs es <> "]"
 
 joinExprs :: List Expr -> String
@@ -62,6 +66,8 @@ parseExpr =
           , Hide <$ string "hide"
           , Show <$ string "show"
           , Background <$> parseBackground
+          , PenUp <$ command [ "penup", "pu" ]
+          , PenDown <$ command [ "pendown", "pd" ]
           , parseRepeat
           ]
 
