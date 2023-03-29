@@ -6,9 +6,7 @@ module CommandParser
 import Prelude
 import Data.CodePoint.Unicode (isLetter)
 import Data.Either (Either)
-import Data.Generic.Rep (class Generic)
 import Data.List (List)
-import Data.Show.Generic (genericShow)
 import Parsing (ParseError, runParser)
 import Parsing as P
 import Parsing.Combinators (asErrorMessage, choice, sepBy)
@@ -27,10 +25,14 @@ data Expr
   | Show
   | Background String
 
-derive instance genericExpr :: Generic Expr _
-
 instance showExpr :: Show Expr where
-  show = genericShow
+  show (Forward x) = "forward " <> show x
+  show (TurnLeft x) = "left " <> show x
+  show (TurnRight x) = "right " <> show x
+  show (Background x) = "background " <> show x
+  show Clear = "clear"
+  show Hide = "hide"
+  show Show = "show"
 
 parse :: String -> Either ParseError (List Expr)
 parse = flip runParser parseExprs

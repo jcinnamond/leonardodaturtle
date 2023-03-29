@@ -392,14 +392,14 @@
     return function(dictShowRecordFields) {
       var showRecordFields1 = showRecordFields(dictShowRecordFields);
       return function(dictShow) {
-        var show14 = show(dictShow);
+        var show15 = show(dictShow);
         return {
           showRecordFields: function(v) {
             return function(record) {
               var tail2 = showRecordFields1($$Proxy.value)(record);
               var key = reflectSymbol2($$Proxy.value);
               var focus2 = unsafeGet(key)(record);
-              return " " + (key + (": " + (show14(focus2) + ("," + tail2))));
+              return " " + (key + (": " + (show15(focus2) + ("," + tail2))));
             };
           }
         };
@@ -409,13 +409,13 @@
   var showRecordFieldsConsNil = function(dictIsSymbol) {
     var reflectSymbol2 = reflectSymbol(dictIsSymbol);
     return function(dictShow) {
-      var show14 = show(dictShow);
+      var show15 = show(dictShow);
       return {
         showRecordFields: function(v) {
           return function(record) {
             var key = reflectSymbol2($$Proxy.value);
             var focus2 = unsafeGet(key)(record);
-            return " " + (key + (": " + (show14(focus2) + " ")));
+            return " " + (key + (": " + (show15(focus2) + " ")));
           };
         }
       };
@@ -423,33 +423,6 @@
   };
 
   // output/Data.Generic.Rep/index.js
-  var Inl = /* @__PURE__ */ function() {
-    function Inl2(value0) {
-      this.value0 = value0;
-    }
-    ;
-    Inl2.create = function(value0) {
-      return new Inl2(value0);
-    };
-    return Inl2;
-  }();
-  var Inr = /* @__PURE__ */ function() {
-    function Inr2(value0) {
-      this.value0 = value0;
-    }
-    ;
-    Inr2.create = function(value0) {
-      return new Inr2(value0);
-    };
-    return Inr2;
-  }();
-  var NoArguments = /* @__PURE__ */ function() {
-    function NoArguments2() {
-    }
-    ;
-    NoArguments2.value = new NoArguments2();
-    return NoArguments2;
-  }();
   var from = function(dict) {
     return dict.from;
   };
@@ -18160,6 +18133,26 @@
     return false;
   };
 
+  // output/Effect.Exception/foreign.js
+  function error(msg) {
+    return new Error(msg);
+  }
+  function throwException(e) {
+    return function() {
+      throw e;
+    };
+  }
+
+  // output/Effect.Exception/index.js
+  var $$throw = function($4) {
+    return throwException(error($4));
+  };
+
+  // output/Control.Monad.Error.Class/index.js
+  var throwError = function(dict) {
+    return dict.throwError;
+  };
+
   // output/Data.Show.Generic/foreign.js
   var intercalate2 = function(separator) {
     return function(xs) {
@@ -18169,16 +18162,11 @@
 
   // output/Data.Show.Generic/index.js
   var append2 = /* @__PURE__ */ append(semigroupArray);
-  var genericShowArgsNoArguments = {
-    genericShowArgs: function(v) {
-      return [];
-    }
-  };
   var genericShowArgsArgument = function(dictShow) {
-    var show4 = show(dictShow);
+    var show5 = show(dictShow);
     return {
       genericShowArgs: function(v) {
-        return [show4(v)];
+        return [show5(v)];
       }
     };
   };
@@ -18205,25 +18193,6 @@
   var genericShow$prime = function(dict) {
     return dict["genericShow'"];
   };
-  var genericShowSum = function(dictGenericShow) {
-    var genericShow$prime1 = genericShow$prime(dictGenericShow);
-    return function(dictGenericShow1) {
-      var genericShow$prime2 = genericShow$prime(dictGenericShow1);
-      return {
-        "genericShow'": function(v) {
-          if (v instanceof Inl) {
-            return genericShow$prime1(v.value0);
-          }
-          ;
-          if (v instanceof Inr) {
-            return genericShow$prime2(v.value0);
-          }
-          ;
-          throw new Error("Failed pattern match at Data.Show.Generic (line 26, column 1 - line 28, column 40): " + [v.constructor.name]);
-        }
-      };
-    };
-  };
   var genericShow = function(dictGeneric) {
     var from2 = from(dictGeneric);
     return function(dictGenericShow) {
@@ -18232,26 +18201,6 @@
         return genericShow$prime1(from2(x));
       };
     };
-  };
-
-  // output/Effect.Exception/foreign.js
-  function error(msg) {
-    return new Error(msg);
-  }
-  function throwException(e) {
-    return function() {
-      throw e;
-    };
-  }
-
-  // output/Effect.Exception/index.js
-  var $$throw = function($4) {
-    return throwException(error($4));
-  };
-
-  // output/Control.Monad.Error.Class/index.js
-  var throwError = function(dict) {
-    return dict.throwError;
   };
 
   // output/Parsing/index.js
@@ -19196,8 +19145,8 @@
   }();
 
   // output/CommandParser/index.js
-  var genericShowConstructor2 = /* @__PURE__ */ genericShowConstructor(/* @__PURE__ */ genericShowArgsArgument(showNumber));
-  var genericShowConstructor1 = /* @__PURE__ */ genericShowConstructor(genericShowArgsNoArguments);
+  var show3 = /* @__PURE__ */ show(showNumber);
+  var show13 = /* @__PURE__ */ show(showString);
   var choice2 = /* @__PURE__ */ choice(foldableArray);
   var applySecond4 = /* @__PURE__ */ applySecond(applyParserT);
   var map5 = /* @__PURE__ */ map(functorParserT);
@@ -19263,105 +19212,43 @@
     };
     return Background2;
   }();
-  var genericExpr = {
-    to: function(x) {
-      if (x instanceof Inl) {
-        return new Forward(x.value0);
+  var showExpr = {
+    show: function(v) {
+      if (v instanceof Forward) {
+        return "forward " + show3(v.value0);
       }
       ;
-      if (x instanceof Inr && x.value0 instanceof Inl) {
-        return new TurnLeft(x.value0.value0);
+      if (v instanceof TurnLeft) {
+        return "left " + show3(v.value0);
       }
       ;
-      if (x instanceof Inr && (x.value0 instanceof Inr && x.value0.value0 instanceof Inl)) {
-        return new TurnRight(x.value0.value0.value0);
+      if (v instanceof TurnRight) {
+        return "right " + show3(v.value0);
       }
       ;
-      if (x instanceof Inr && (x.value0 instanceof Inr && (x.value0.value0 instanceof Inr && x.value0.value0.value0 instanceof Inl))) {
-        return Clear.value;
+      if (v instanceof Background) {
+        return "background " + show13(v.value0);
       }
       ;
-      if (x instanceof Inr && (x.value0 instanceof Inr && (x.value0.value0 instanceof Inr && (x.value0.value0.value0 instanceof Inr && x.value0.value0.value0.value0 instanceof Inl)))) {
-        return Hide.value;
+      if (v instanceof Clear) {
+        return "clear";
       }
       ;
-      if (x instanceof Inr && (x.value0 instanceof Inr && (x.value0.value0 instanceof Inr && (x.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0 instanceof Inr && x.value0.value0.value0.value0.value0 instanceof Inl))))) {
-        return Show.value;
+      if (v instanceof Hide) {
+        return "hide";
       }
       ;
-      if (x instanceof Inr && (x.value0 instanceof Inr && (x.value0.value0 instanceof Inr && (x.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0 instanceof Inr && x.value0.value0.value0.value0.value0 instanceof Inr))))) {
-        return new Background(x.value0.value0.value0.value0.value0.value0);
+      if (v instanceof Show) {
+        return "show";
       }
       ;
-      throw new Error("Failed pattern match at CommandParser (line 30, column 1 - line 30, column 46): " + [x.constructor.name]);
-    },
-    from: function(x) {
-      if (x instanceof Forward) {
-        return new Inl(x.value0);
-      }
-      ;
-      if (x instanceof TurnLeft) {
-        return new Inr(new Inl(x.value0));
-      }
-      ;
-      if (x instanceof TurnRight) {
-        return new Inr(new Inr(new Inl(x.value0)));
-      }
-      ;
-      if (x instanceof Clear) {
-        return new Inr(new Inr(new Inr(new Inl(NoArguments.value))));
-      }
-      ;
-      if (x instanceof Hide) {
-        return new Inr(new Inr(new Inr(new Inr(new Inl(NoArguments.value)))));
-      }
-      ;
-      if (x instanceof Show) {
-        return new Inr(new Inr(new Inr(new Inr(new Inr(new Inl(NoArguments.value))))));
-      }
-      ;
-      if (x instanceof Background) {
-        return new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(x.value0))))));
-      }
-      ;
-      throw new Error("Failed pattern match at CommandParser (line 30, column 1 - line 30, column 46): " + [x.constructor.name]);
+      throw new Error("Failed pattern match at CommandParser (line 28, column 1 - line 35, column 21): " + [v.constructor.name]);
     }
   };
-  var showExpr = {
-    show: /* @__PURE__ */ genericShow(genericExpr)(/* @__PURE__ */ genericShowSum(/* @__PURE__ */ genericShowConstructor2({
-      reflectSymbol: function() {
-        return "Forward";
-      }
-    }))(/* @__PURE__ */ genericShowSum(/* @__PURE__ */ genericShowConstructor2({
-      reflectSymbol: function() {
-        return "TurnLeft";
-      }
-    }))(/* @__PURE__ */ genericShowSum(/* @__PURE__ */ genericShowConstructor2({
-      reflectSymbol: function() {
-        return "TurnRight";
-      }
-    }))(/* @__PURE__ */ genericShowSum(/* @__PURE__ */ genericShowConstructor1({
-      reflectSymbol: function() {
-        return "Clear";
-      }
-    }))(/* @__PURE__ */ genericShowSum(/* @__PURE__ */ genericShowConstructor1({
-      reflectSymbol: function() {
-        return "Hide";
-      }
-    }))(/* @__PURE__ */ genericShowSum(/* @__PURE__ */ genericShowConstructor1({
-      reflectSymbol: function() {
-        return "Show";
-      }
-    }))(/* @__PURE__ */ genericShowConstructor(/* @__PURE__ */ genericShowArgsArgument(showString))({
-      reflectSymbol: function() {
-        return "Background";
-      }
-    }))))))))
-  };
   var command = /* @__PURE__ */ function() {
-    var $77 = map(functorArray)(string);
-    return function($78) {
-      return choice2($77($78));
+    var $15 = map(functorArray)(string);
+    return function($16) {
+      return choice2($15($16));
     };
   }();
   var parseBackground = /* @__PURE__ */ applySecond4(/* @__PURE__ */ applySecond4(/* @__PURE__ */ command(["background", "bg"]))(skipSpaces))(/* @__PURE__ */ takeWhile4(isLetter));
@@ -19694,10 +19581,10 @@
   var pure4 = /* @__PURE__ */ pure(applicativeEffect);
   var map7 = /* @__PURE__ */ map(functorEffect);
   var bindFlipped3 = /* @__PURE__ */ bindFlipped(bindEffect);
-  var show3 = /* @__PURE__ */ show(showExpr);
+  var show4 = /* @__PURE__ */ show(showExpr);
   var foldM3 = /* @__PURE__ */ foldM(monadEffect);
   var traverse_2 = /* @__PURE__ */ traverse_(applicativeEffect)(foldableArray);
-  var show13 = /* @__PURE__ */ show(showParseError);
+  var show14 = /* @__PURE__ */ show(showParseError);
   var setVisible = function(w) {
     return function(isVisible) {
       return {
@@ -19933,7 +19820,7 @@
           var go2 = function(w$prime) {
             return function(e) {
               return function __do3() {
-                output(doc)(show3(e))();
+                output(doc)(show4(e))();
                 return $$eval(doc)(e)(w$prime)();
               };
             };
@@ -20011,7 +19898,7 @@
           setValue3("")(doc.input)();
           var v2 = parse(v1);
           if (v2 instanceof Left) {
-            return output(doc)("!!! " + show13(v2.value0))();
+            return output(doc)("!!! " + show14(v2.value0))();
           }
           ;
           if (v2 instanceof Right) {
