@@ -170,6 +170,13 @@ eval _ Show w = pure $ setVisible w true
 
 eval _ Hide w = pure $ setVisible w false
 
+eval doc (Repeat c exprs) w = evalRepeatedly c doc exprs w
+
+evalRepeatedly :: Int -> Doc -> List Expr -> World -> Effect World
+evalRepeatedly c doc commands w
+  | c < 1 = pure w
+  | otherwise = evalCommands doc commands w >>= evalRepeatedly (c - 1) doc commands
+
 listenToCommands :: Ref.Ref World -> Doc -> Effect Unit
 listenToCommands tr doc = do
   listener <- eventListener $ handleCommand tr doc
