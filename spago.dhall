@@ -7,6 +7,7 @@
   , "either"
   , "exceptions"
   , "foldable-traversable"
+  , "lists"
   , "maybe"
   , "numbers"
   , "parsing"

@@ -7,12 +7,13 @@ import Prelude
 import Data.CodePoint.Unicode (isLetter)
 import Data.Either (Either)
 import Data.Generic.Rep (class Generic)
+import Data.List (List)
 import Data.Show.Generic (genericShow)
 import Parsing (ParseError, runParser)
 import Parsing as P
-import Parsing.Combinators (asErrorMessage, choice)
+import Parsing.Combinators (asErrorMessage, choice, sepBy)
 import Parsing.String (string)
-import Parsing.String.Basic (number, skipSpaces, takeWhile)
+import Parsing.String.Basic (number, skipSpaces, takeWhile, whiteSpace)
 
 type Parser
   = P.Parser String
@@ -31,8 +32,11 @@ derive instance genericExpr :: Generic Expr _
 instance showExpr :: Show Expr where
   show = genericShow
 
-parse :: String -> Either ParseError Expr
-parse = flip runParser parseExpr
+parse :: String -> Either ParseError (List Expr)
+parse = flip runParser parseExprs
+
+parseExprs :: Parser (List Expr)
+parseExprs = parseExpr `sepBy` whiteSpace
 
 parseExpr :: Parser Expr
 parseExpr =

@@ -5,8 +5,10 @@ import CommandParser (Expr(..), parse)
 import Data.Array (snoc)
 import Data.Either (Either(..))
 import Data.Foldable (traverse_)
+import Data.List (List)
+import Data.List as L
 import Data.Maybe (Maybe(..))
-import Data.Number (fromString, sin, cos, pi)
+import Data.Number (cos, pi, sin)
 import Effect (Effect)
 import Effect.Console (log)
 import Effect.Exception (throw)
@@ -138,11 +140,20 @@ handleCommand wr doc _ = do
   setValue "" doc.input
   case parse v of
     Left err -> output doc $ "!!! " <> show err
-    Right command -> do
-      output doc $ show command
-      w' <- eval doc command =<< Ref.read wr
+    Right commands -> do
+      w' <- evalCommands doc commands =<< Ref.read wr
       Ref.write w' wr
       render doc w'
+
+evalCommands :: Doc -> List Expr -> World -> Effect World
+evalCommands doc commands w
+  | L.null commands = pure w
+  | otherwise = L.foldM go w commands
+    where
+    go :: World -> Expr -> Effect World
+    go w' e = do
+      output doc $ show e
+      eval doc e w'
 
 eval :: Doc -> Expr -> World -> Effect World
 eval _ (Forward n) w = moveTurtle w n
