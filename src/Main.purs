@@ -1,12 +1,12 @@
 module Main where
 
 import Prelude
+import CommandParser (Expr(..), parse)
 import Data.Array (snoc)
+import Data.Either (Either(..))
 import Data.Foldable (traverse_)
-import Data.List (List(..), fromFoldable, (:))
 import Data.Maybe (Maybe(..))
 import Data.Number (fromString, sin, cos, pi)
-import Data.String.Utils (words)
 import Effect (Effect)
 import Effect.Console (log)
 import Effect.Exception (throw)
@@ -106,6 +106,9 @@ turn w n = pure w { turtle = turnTurtle w.turtle n }
 radians :: Number -> Number
 radians x = x * pi / 180.0
 
+setVisible :: World -> Boolean -> World
+setVisible w isVisible = w { turtle = w.turtle { visible = isVisible } }
+
 render :: Doc -> World -> Effect Unit
 render doc w = do
   clearCanvas
@@ -121,46 +124,6 @@ render doc w = do
       setFillStyle doc.canvasCtx w.bg
       fillRect doc.canvasCtx { x: 0.0, y: 0.0, width: width, height: height }
 
-leftCommand :: Doc -> World -> String -> Effect World
-leftCommand doc w s = do
-  case fromString s of
-    Nothing -> error "expected number when turning left" *> pure w
-    Just n -> do
-      output doc $ "left " <> show n
-      turn w (n * -1.0)
-
-rightCommand :: Doc -> World -> String -> Effect World
-rightCommand doc w s = do
-  case fromString s of
-    Nothing -> error "expected number when turning right" *> pure w
-    Just n -> do
-      output doc $ "right " <> show n
-      turn w n
-
-moveCommand :: Doc -> World -> String -> Effect World
-moveCommand doc w s = do
-  case fromString s of
-    Nothing -> error "expected number when moving" *> pure w
-    Just n -> do
-      output doc $ "move " <> show n
-      moveTurtle w n
-
-clearCommand :: Doc -> Effect World
-clearCommand doc = do
-  output doc "clear"
-  initialWorld doc
-
-showCommand :: World -> Effect World
-showCommand w = pure $ w { turtle = w.turtle { visible = true } }
-
-hideCommand :: World -> Effect World
-hideCommand w = pure $ w { turtle = w.turtle { visible = false } }
-
-bgCommand :: Doc -> World -> String -> Effect World
-bgCommand doc w bg = do
-  output doc $ "bg " <> bg
-  pure $ w { bg = bg }
-
 error :: String -> Effect Unit
 error = log
 
@@ -173,28 +136,28 @@ handleCommand :: Ref World -> Doc -> Event -> Effect Unit
 handleCommand wr doc _ = do
   v <- value doc.input
   setValue "" doc.input
-  w' <- eval doc (fromFoldable $ words v) =<< Ref.read wr
-  Ref.write w' wr
-  render doc w'
+  case parse v of
+    Left err -> output doc $ "!!! " <> show err
+    Right command -> do
+      output doc $ show command
+      w' <- eval doc command =<< Ref.read wr
+      Ref.write w' wr
+      render doc w'
 
-eval :: Doc -> List String -> World -> Effect World
-eval _ Nil w = pure w
+eval :: Doc -> Expr -> World -> Effect World
+eval _ (Forward n) w = moveTurtle w n
 
-eval doc ("move" : distance : ss) w = moveCommand doc w distance >>= eval doc ss
+eval _ (TurnLeft angle) w = turn w (angle * -1.0)
 
-eval doc ("left" : angle : ss) w = leftCommand doc w angle >>= eval doc ss
+eval _ (TurnRight angle) w = turn w angle
 
-eval doc ("right" : angle : ss) w = rightCommand doc w angle >>= eval doc ss
+eval doc Clear _ = initialWorld doc
 
-eval doc ("clear" : ss) _ = clearCommand doc >>= eval doc ss
+eval _ (Background color) w = pure $ w { bg = color }
 
-eval doc ("hide" : ss) w = hideCommand w >>= eval doc ss
+eval _ Show w = pure $ setVisible w true
 
-eval doc ("show" : ss) w = showCommand w >>= eval doc ss
-
-eval doc ("bg" : color : ss) w = bgCommand doc w color >>= eval doc ss
-
-eval _ ss w = (error $ "unrecognised command " <> show ss) *> pure w
+eval _ Hide w = pure $ setVisible w false
 
 listenToCommands :: Ref.Ref World -> Doc -> Effect Unit
 listenToCommands tr doc = do
