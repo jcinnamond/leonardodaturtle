@@ -30,7 +30,7 @@ label {
     margin-bottom: 1em;
 }
 
-#command,
+.command,
 .output {
     padding: 5px;
     min-width: 250px;
