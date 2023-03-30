@@ -63,28 +63,28 @@ parseExpr =
   defer \_ ->
     asErrorMessage "command"
       $ choice
-          [ Forward <$> parseNum [ "forward", "fd" ]
-          , TurnLeft <$> parseNum [ "left", "lt" ]
-          , TurnRight <$> parseNum [ "right", "rt" ]
+          [ Forward <$> commandWithNum [ "forward", "fd" ]
+          , TurnLeft <$> commandWithNum [ "left", "lt" ]
+          , TurnRight <$> commandWithNum [ "right", "rt" ]
           , Clear <$ string "clear"
           , Hide <$ string "hide"
           , Show <$ string "show"
-          , Background <$> parseString [ "background", "bg" ]
+          , Background <$> commandWithString [ "background", "bg" ]
           , PenUp <$ command [ "penup", "pu" ]
           , PenDown <$ command [ "pendown", "pd" ]
-          , Color <$> parseString [ "color" ]
-          , Width <$> parseInt [ "width" ]
+          , Color <$> commandWithString [ "color" ]
+          , Width <$> commandWithInteger [ "width" ]
           , parseRepeat
           ]
 
-parseNum :: Array String -> Parser Number
-parseNum ss = command ss *> skipSpaces *> number
+commandWithNum :: Array String -> Parser Number
+commandWithNum ss = command ss *> skipSpaces *> number
 
-parseInt :: Array String -> Parser Int
-parseInt ss = command ss *> skipSpaces *> intDecimal
+commandWithInteger :: Array String -> Parser Int
+commandWithInteger ss = command ss *> skipSpaces *> intDecimal
 
-parseString :: Array String -> Parser String
-parseString ss = command ss *> skipSpaces *> takeWhile isLetter
+commandWithString :: Array String -> Parser String
+commandWithString ss = command ss *> skipSpaces *> takeWhile isLetter
 
 parseRepeat :: Parser Expr
 parseRepeat = do

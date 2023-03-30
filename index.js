@@ -19582,18 +19582,18 @@
       return choice2($27($28));
     };
   }();
-  var $$parseInt = function(ss) {
+  var commandWithInteger = function(ss) {
     return applySecond4(applySecond4(command(ss))(skipSpaces))(intDecimal);
   };
-  var parseNum = function(ss) {
+  var commandWithNum = function(ss) {
     return applySecond4(applySecond4(command(ss))(skipSpaces))(number);
   };
-  var parseString = function(ss) {
+  var commandWithString = function(ss) {
     return applySecond4(applySecond4(command(ss))(skipSpaces))(takeWhile4(isLetter));
   };
   var $lazy_parseExpr = /* @__PURE__ */ $runtime_lazy4("parseExpr", "CommandParser", function() {
     return defer3(function(v) {
-      return asErrorMessage("command")(choice2([map5(Forward.create)(parseNum(["forward", "fd"])), map5(TurnLeft.create)(parseNum(["left", "lt"])), map5(TurnRight.create)(parseNum(["right", "rt"])), voidRight2(Clear.value)(string("clear")), voidRight2(Hide.value)(string("hide")), voidRight2(Show.value)(string("show")), map5(Background.create)(parseString(["background", "bg"])), voidRight2(PenUp.value)(command(["penup", "pu"])), voidRight2(PenDown.value)(command(["pendown", "pd"])), map5(Color.create)(parseString(["color"])), map5(Width.create)($$parseInt(["width"])), $lazy_parseRepeat(77)]));
+      return asErrorMessage("command")(choice2([map5(Forward.create)(commandWithNum(["forward", "fd"])), map5(TurnLeft.create)(commandWithNum(["left", "lt"])), map5(TurnRight.create)(commandWithNum(["right", "rt"])), voidRight2(Clear.value)(string("clear")), voidRight2(Hide.value)(string("hide")), voidRight2(Show.value)(string("show")), map5(Background.create)(commandWithString(["background", "bg"])), voidRight2(PenUp.value)(command(["penup", "pu"])), voidRight2(PenDown.value)(command(["pendown", "pd"])), map5(Color.create)(commandWithString(["color"])), map5(Width.create)(commandWithInteger(["width"])), $lazy_parseRepeat(77)]));
     });
   });
   var $lazy_parseExprs = /* @__PURE__ */ $runtime_lazy4("parseExprs", "CommandParser", function() {
