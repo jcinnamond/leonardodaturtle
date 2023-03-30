@@ -8,6 +8,7 @@
   , "either"
   , "exceptions"
   , "foldable-traversable"
+  , "integers"
   , "lists"
   , "maybe"
   , "numbers"

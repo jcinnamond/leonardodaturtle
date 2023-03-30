@@ -30,17 +30,21 @@ data Expr
   | Repeat Int (List Expr)
   | PenUp
   | PenDown
+  | Color String
+  | Width Int
 
 instance showExpr :: Show Expr where
   show (Forward x) = "forward " <> show x
   show (TurnLeft x) = "left " <> show x
   show (TurnRight x) = "right " <> show x
-  show (Background x) = "background " <> show x
+  show (Background x) = "background " <> x
   show Clear = "clear"
   show Hide = "hide"
   show Show = "show"
   show PenUp = "penup"
   show PenDown = "pendown"
+  show (Color x) = "color " <> x
+  show (Width x) = "width " <> show x
   show (Repeat x es) = "repeat " <> show x <> " [" <> joinExprs es <> "]"
 
 joinExprs :: List Expr -> String
@@ -65,17 +69,22 @@ parseExpr =
           , Clear <$ string "clear"
           , Hide <$ string "hide"
           , Show <$ string "show"
-          , Background <$> parseBackground
+          , Background <$> parseString [ "background", "bg" ]
           , PenUp <$ command [ "penup", "pu" ]
           , PenDown <$ command [ "pendown", "pd" ]
+          , Color <$> parseString [ "color" ]
+          , Width <$> parseInt [ "width" ]
           , parseRepeat
           ]
 
 parseNum :: Array String -> Parser Number
 parseNum ss = command ss *> skipSpaces *> number
 
-parseBackground :: Parser String
-parseBackground = command [ "background", "bg" ] *> skipSpaces *> takeWhile isLetter
+parseInt :: Array String -> Parser Int
+parseInt ss = command ss *> skipSpaces *> intDecimal
+
+parseString :: Array String -> Parser String
+parseString ss = command ss *> skipSpaces *> takeWhile isLetter
 
 parseRepeat :: Parser Expr
 parseRepeat = do

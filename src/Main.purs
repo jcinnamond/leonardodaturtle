@@ -5,6 +5,7 @@ import CommandParser (Expr(..), parse)
 import Data.Array (snoc)
 import Data.Either (Either(..))
 import Data.Foldable (traverse_)
+import Data.Int (toNumber)
 import Data.List (List)
 import Data.List as L
 import Data.Maybe (Maybe(..))
@@ -14,7 +15,7 @@ import Effect.Console (log)
 import Effect.Exception (throw)
 import Effect.Ref (Ref)
 import Effect.Ref as Ref
-import Graphics.Canvas (CanvasElement, Context2D, arc, clearRect, closePath, fillPath, fillRect, getCanvasElementById, getCanvasHeight, getCanvasWidth, getContext2D, lineTo, moveTo, setCanvasHeight, setCanvasWidth, setFillStyle, strokePath, withContext)
+import Graphics.Canvas (CanvasElement, Context2D, arc, clearRect, closePath, fillPath, fillRect, getCanvasElementById, getCanvasHeight, getCanvasWidth, getContext2D, lineTo, moveTo, setCanvasHeight, setCanvasWidth, setFillStyle, setLineWidth, setStrokeStyle, strokePath, withContext)
 import Web.DOM (Element, NonElementParentNode)
 import Web.DOM.Element (clientHeight, clientWidth, toEventTarget)
 import Web.DOM.NonElementParentNode (getElementById)
@@ -38,6 +39,8 @@ type Doc
 type Line
   = { from :: Point
     , to :: Point
+    , color :: String
+    , width :: Int
     }
 
 type World
@@ -51,6 +54,8 @@ type Turtle
     , angle :: Number -- in radians
     , visible :: Boolean
     , drawing :: Boolean
+    , color :: String
+    , width :: Int
     }
 
 type Point
@@ -72,10 +77,12 @@ drawTurtle { position, angle } ctx =
 drawLines :: Array Line -> Doc -> Effect Unit
 drawLines lines doc = traverse_ (drawLine doc.canvasCtx) lines
   where
-  drawLine ctx { from, to } = do
+  drawLine ctx { from, to, color, width } = do
     strokePath ctx
       $ do
           moveTo ctx from.x from.y
+          setLineWidth ctx (toNumber width)
+          setStrokeStyle ctx color
           lineTo ctx to.x to.y
           closePath ctx
 
@@ -91,8 +98,8 @@ moveTurtle w n =
   move t distance = t { position = newPos t.position t.angle distance }
 
   addLine :: Array Line -> Turtle -> Number -> Array Line
-  addLine ls { position, angle, drawing } distance
-    | drawing = snoc ls { from: position, to: newPos position angle distance }
+  addLine ls { position, angle, drawing, color, width } distance
+    | drawing = snoc ls { from: position, to: newPos position angle distance, color: color, width: width }
     | otherwise = ls
 
 newPos :: Point -> Number -> Number -> Point
@@ -177,6 +184,10 @@ eval _ PenUp w = pure $ w { turtle { drawing = false } }
 
 eval _ PenDown w = pure $ w { turtle { drawing = true } }
 
+eval _ (Color c) w = pure $ w { turtle { color = c } }
+
+eval _ (Width n) w = pure $ w { turtle { width = n } }
+
 eval doc (Repeat c exprs) w = evalRepeatedly c doc exprs w
 
 evalRepeatedly :: Int -> Doc -> List Expr -> World -> Effect World
@@ -225,7 +236,14 @@ initialTurtle :: CanvasElement -> Effect Turtle
 initialTurtle canvas = do
   width <- getCanvasWidth canvas
   height <- getCanvasHeight canvas
-  pure { position: { x: width / 2.0, y: height / 2.0 }, angle: 0.0, visible: true, drawing: true }
+  pure
+    { position: { x: width / 2.0, y: height / 2.0 }
+    , angle: 0.0
+    , visible: true
+    , drawing: true
+    , color: "black"
+    , width: 1
+    }
 
 initialWorld :: Doc -> Effect World
 initialWorld doc = do

@@ -19391,8 +19391,7 @@
     };
   };
   var show3 = /* @__PURE__ */ show(showNumber);
-  var show13 = /* @__PURE__ */ show(showString);
-  var show23 = /* @__PURE__ */ show(showInt);
+  var show13 = /* @__PURE__ */ show(showInt);
   var choice2 = /* @__PURE__ */ choice(foldableArray);
   var applySecond4 = /* @__PURE__ */ applySecond(applyParserT);
   var bind4 = /* @__PURE__ */ bind(bindParserT);
@@ -19489,6 +19488,26 @@
     PenDown2.value = new PenDown2();
     return PenDown2;
   }();
+  var Color = /* @__PURE__ */ function() {
+    function Color2(value0) {
+      this.value0 = value0;
+    }
+    ;
+    Color2.create = function(value0) {
+      return new Color2(value0);
+    };
+    return Color2;
+  }();
+  var Width = /* @__PURE__ */ function() {
+    function Width2(value0) {
+      this.value0 = value0;
+    }
+    ;
+    Width2.create = function(value0) {
+      return new Width2(value0);
+    };
+    return Width2;
+  }();
   var showExpr = {
     show: function(v) {
       if (v instanceof Forward) {
@@ -19504,7 +19523,7 @@
       }
       ;
       if (v instanceof Background) {
-        return "background " + show13(v.value0);
+        return "background " + v.value0;
       }
       ;
       if (v instanceof Clear) {
@@ -19527,17 +19546,25 @@
         return "pendown";
       }
       ;
-      if (v instanceof Repeat) {
-        return "repeat " + (show23(v.value0) + (" [" + ($lazy_joinExprs(44)(v.value1) + "]")));
+      if (v instanceof Color) {
+        return "color " + v.value0;
       }
       ;
-      throw new Error("Failed pattern match at CommandParser (line 34, column 1 - line 44, column 74): " + [v.constructor.name]);
+      if (v instanceof Width) {
+        return "width " + show13(v.value0);
+      }
+      ;
+      if (v instanceof Repeat) {
+        return "repeat " + (show13(v.value0) + (" [" + ($lazy_joinExprs(48)(v.value1) + "]")));
+      }
+      ;
+      throw new Error("Failed pattern match at CommandParser (line 36, column 1 - line 48, column 74): " + [v.constructor.name]);
     }
   };
   var $lazy_joinExprs = /* @__PURE__ */ $runtime_lazy4("joinExprs", "CommandParser", function() {
     var sep = function(s) {
-      var $25 = $$null2(s);
-      if ($25) {
+      var $26 = $$null2(s);
+      if ($26) {
         return "";
       }
       ;
@@ -19550,35 +19577,40 @@
     })("");
   });
   var command = /* @__PURE__ */ function() {
-    var $26 = map(functorArray)(string);
-    return function($27) {
-      return choice2($26($27));
+    var $27 = map(functorArray)(string);
+    return function($28) {
+      return choice2($27($28));
     };
   }();
-  var parseBackground = /* @__PURE__ */ applySecond4(/* @__PURE__ */ applySecond4(/* @__PURE__ */ command(["background", "bg"]))(skipSpaces))(/* @__PURE__ */ takeWhile4(isLetter));
+  var $$parseInt = function(ss) {
+    return applySecond4(applySecond4(command(ss))(skipSpaces))(intDecimal);
+  };
   var parseNum = function(ss) {
     return applySecond4(applySecond4(command(ss))(skipSpaces))(number);
   };
+  var parseString = function(ss) {
+    return applySecond4(applySecond4(command(ss))(skipSpaces))(takeWhile4(isLetter));
+  };
   var $lazy_parseExpr = /* @__PURE__ */ $runtime_lazy4("parseExpr", "CommandParser", function() {
     return defer3(function(v) {
-      return asErrorMessage("command")(choice2([map5(Forward.create)(parseNum(["forward", "fd"])), map5(TurnLeft.create)(parseNum(["left", "lt"])), map5(TurnRight.create)(parseNum(["right", "rt"])), voidRight2(Clear.value)(string("clear")), voidRight2(Hide.value)(string("hide")), voidRight2(Show.value)(string("show")), map5(Background.create)(parseBackground), voidRight2(PenUp.value)(command(["penup", "pu"])), voidRight2(PenDown.value)(command(["pendown", "pd"])), $lazy_parseRepeat(71)]));
+      return asErrorMessage("command")(choice2([map5(Forward.create)(parseNum(["forward", "fd"])), map5(TurnLeft.create)(parseNum(["left", "lt"])), map5(TurnRight.create)(parseNum(["right", "rt"])), voidRight2(Clear.value)(string("clear")), voidRight2(Hide.value)(string("hide")), voidRight2(Show.value)(string("show")), map5(Background.create)(parseString(["background", "bg"])), voidRight2(PenUp.value)(command(["penup", "pu"])), voidRight2(PenDown.value)(command(["pendown", "pd"])), map5(Color.create)(parseString(["color"])), map5(Width.create)($$parseInt(["width"])), $lazy_parseRepeat(77)]));
     });
   });
   var $lazy_parseExprs = /* @__PURE__ */ $runtime_lazy4("parseExprs", "CommandParser", function() {
     return defer3(function(v) {
-      return sepBy($lazy_parseExpr(55))(whiteSpace);
+      return sepBy($lazy_parseExpr(59))(whiteSpace);
     });
   });
   var $lazy_parseRepeat = /* @__PURE__ */ $runtime_lazy4("parseRepeat", "CommandParser", function() {
     return bind4(applySecond4(string("repeat"))(whiteSpace))(function() {
       return bind4(applyFirst2(intDecimal)(skipSpaces))(function(count) {
-        return bind4(applyFirst2(applySecond4($$char("["))($lazy_parseExprs(84)))($$char("]")))(function(exprs) {
+        return bind4(applyFirst2(applySecond4($$char("["))($lazy_parseExprs(93)))($$char("]")))(function(exprs) {
           return pure4(new Repeat(count, exprs));
         });
       });
     });
   });
-  var parseExprs = /* @__PURE__ */ $lazy_parseExprs(54);
+  var parseExprs = /* @__PURE__ */ $lazy_parseExprs(58);
   var parse = /* @__PURE__ */ flip(runParser)(parseExprs);
 
   // output/Graphics.Canvas/foreign.js
@@ -19621,10 +19653,24 @@
       };
     };
   }
+  function setLineWidth(ctx) {
+    return function(width8) {
+      return function() {
+        ctx.lineWidth = width8;
+      };
+    };
+  }
   function setFillStyle(ctx) {
     return function(style) {
       return function() {
         ctx.fillStyle = style;
+      };
+    };
+  }
+  function setStrokeStyle(ctx) {
+    return function(style) {
+      return function() {
+        ctx.strokeStyle = style;
       };
     };
   }
@@ -19913,7 +19959,9 @@
           position: w.turtle.position,
           angle: w.turtle.angle,
           visible: isVisible,
-          drawing: w.turtle.drawing
+          drawing: w.turtle.drawing,
+          color: w.turtle.color,
+          width: w.turtle.width
         },
         bg: w.bg,
         lines: w.lines
@@ -19931,7 +19979,9 @@
             position: t.position,
             angle: t.angle + radians(angle),
             visible: t.visible,
-            drawing: t.drawing
+            drawing: t.drawing,
+            color: t.color,
+            width: t.width
           };
         };
       };
@@ -19974,7 +20024,7 @@
           return maybeElem.value0;
         }
         ;
-        throw new Error("Failed pattern match at Main (line 220, column 3 - line 222, column 21): " + [maybeElem.constructor.name]);
+        throw new Error("Failed pattern match at Main (line 231, column 3 - line 233, column 21): " + [maybeElem.constructor.name]);
       };
     };
   };
@@ -20003,7 +20053,7 @@
         return v.value0;
       }
       ;
-      throw new Error("Failed pattern match at Main (line 197, column 12 - line 199, column 21): " + [v.constructor.name]);
+      throw new Error("Failed pattern match at Main (line 208, column 12 - line 210, column 21): " + [v.constructor.name]);
     }();
     var outputElem = mustFindElem("output")(doc)();
     var out = function() {
@@ -20016,7 +20066,7 @@
         return v.value0;
       }
       ;
-      throw new Error("Failed pattern match at Main (line 201, column 10 - line 203, column 21): " + [v.constructor.name]);
+      throw new Error("Failed pattern match at Main (line 212, column 10 - line 214, column 21): " + [v.constructor.name]);
     }();
     var maybeCanvas = getCanvasElementById("canvas")();
     var canvas = function() {
@@ -20028,7 +20078,7 @@
         return maybeCanvas.value0;
       }
       ;
-      throw new Error("Failed pattern match at Main (line 205, column 13 - line 207, column 21): " + [maybeCanvas.constructor.name]);
+      throw new Error("Failed pattern match at Main (line 216, column 13 - line 218, column 21): " + [maybeCanvas.constructor.name]);
     }();
     var ctx = getContext2D(canvas)();
     return {
@@ -20047,7 +20097,9 @@
             position: newPos(t.position)(t.angle)(distance),
             angle: t.angle,
             visible: t.visible,
-            drawing: t.drawing
+            drawing: t.drawing,
+            color: t.color,
+            width: t.width
           };
         };
       };
@@ -20057,7 +20109,9 @@
             if (v.drawing) {
               return snoc(ls)({
                 from: v.position,
-                to: newPos(v.position)(v.angle)(distance)
+                to: newPos(v.position)(v.angle)(distance),
+                color: v.color,
+                width: v.width
               });
             }
             ;
@@ -20065,7 +20119,7 @@
               return ls;
             }
             ;
-            throw new Error("Failed pattern match at Main (line 93, column 3 - line 93, column 58): " + [ls.constructor.name, v.constructor.name, distance.constructor.name]);
+            throw new Error("Failed pattern match at Main (line 100, column 3 - line 100, column 58): " + [ls.constructor.name, v.constructor.name, distance.constructor.name]);
           };
         };
       };
@@ -20087,7 +20141,9 @@
         },
         angle: 0,
         visible: true,
-        drawing: true
+        drawing: true,
+        color: "black",
+        width: 1
       };
     };
   };
@@ -20113,7 +20169,7 @@
             return bind5(evalCommands(doc)(commands)(w))(evalRepeatedly(c - 1 | 0)(doc)(commands));
           }
           ;
-          throw new Error("Failed pattern match at Main (line 182, column 1 - line 182, column 67): " + [c.constructor.name, doc.constructor.name, commands.constructor.name, w.constructor.name]);
+          throw new Error("Failed pattern match at Main (line 193, column 1 - line 193, column 67): " + [c.constructor.name, doc.constructor.name, commands.constructor.name, w.constructor.name]);
         };
       };
     };
@@ -20137,7 +20193,7 @@
           return foldM3(go2)(w)(commands);
         }
         ;
-        throw new Error("Failed pattern match at Main (line 151, column 1 - line 151, column 58): " + [doc.constructor.name, commands.constructor.name, w.constructor.name]);
+        throw new Error("Failed pattern match at Main (line 158, column 1 - line 158, column 58): " + [doc.constructor.name, commands.constructor.name, w.constructor.name]);
       };
     };
   };
@@ -20181,8 +20237,10 @@
             turtle: {
               drawing: false,
               angle: v2.turtle.angle,
+              color: v2.turtle.color,
               position: v2.turtle.position,
-              visible: v2.turtle.visible
+              visible: v2.turtle.visible,
+              width: v2.turtle.width
             },
             bg: v2.bg,
             lines: v2.lines
@@ -20194,6 +20252,38 @@
             turtle: {
               drawing: true,
               angle: v2.turtle.angle,
+              color: v2.turtle.color,
+              position: v2.turtle.position,
+              visible: v2.turtle.visible,
+              width: v2.turtle.width
+            },
+            bg: v2.bg,
+            lines: v2.lines
+          });
+        }
+        ;
+        if (v1 instanceof Color) {
+          return pure5({
+            turtle: {
+              color: v1.value0,
+              angle: v2.turtle.angle,
+              drawing: v2.turtle.drawing,
+              position: v2.turtle.position,
+              visible: v2.turtle.visible,
+              width: v2.turtle.width
+            },
+            bg: v2.bg,
+            lines: v2.lines
+          });
+        }
+        ;
+        if (v1 instanceof Width) {
+          return pure5({
+            turtle: {
+              width: v1.value0,
+              angle: v2.turtle.angle,
+              color: v2.turtle.color,
+              drawing: v2.turtle.drawing,
               position: v2.turtle.position,
               visible: v2.turtle.visible
             },
@@ -20206,7 +20296,7 @@
           return evalRepeatedly(v1.value0)(v)(v1.value1)(v2);
         }
         ;
-        throw new Error("Failed pattern match at Main (line 161, column 1 - line 161, column 45): " + [v.constructor.name, v1.constructor.name, v2.constructor.name]);
+        throw new Error("Failed pattern match at Main (line 168, column 1 - line 168, column 45): " + [v.constructor.name, v1.constructor.name, v2.constructor.name]);
       };
     };
   };
@@ -20228,6 +20318,8 @@
         return function(v) {
           return strokePath(ctx)(function __do3() {
             moveTo(ctx)(v.from.x)(v.from.y)();
+            setLineWidth(ctx)(toNumber(v.width))();
+            setStrokeStyle(ctx)(v.color)();
             lineTo(ctx)(v.to.x)(v.to.y)();
             return closePath(ctx)();
           });
@@ -20285,7 +20377,7 @@
             return render(doc)(w$prime)();
           }
           ;
-          throw new Error("Failed pattern match at Main (line 144, column 3 - line 149, column 20): " + [v2.constructor.name]);
+          throw new Error("Failed pattern match at Main (line 151, column 3 - line 156, column 20): " + [v2.constructor.name]);
         };
       };
     };
