@@ -210,6 +210,7 @@
     };
   };
   var ordIntImpl = unsafeCompareImpl;
+  var ordStringImpl = unsafeCompareImpl;
   var ordCharImpl = unsafeCompareImpl;
 
   // output/Data.Eq/foreign.js
@@ -220,8 +221,12 @@
   };
   var eqIntImpl = refEq;
   var eqCharImpl = refEq;
+  var eqStringImpl = refEq;
 
   // output/Data.Eq/index.js
+  var eqString = {
+    eq: eqStringImpl
+  };
   var eqInt = {
     eq: eqIntImpl
   };
@@ -291,6 +296,14 @@
   };
 
   // output/Data.Ord/index.js
+  var ordString = /* @__PURE__ */ function() {
+    return {
+      compare: ordStringImpl(LT.value)(EQ.value)(GT.value),
+      Eq0: function() {
+        return eqString;
+      }
+    };
+  }();
   var ordInt = /* @__PURE__ */ function() {
     return {
       compare: ordIntImpl(LT.value)(EQ.value)(GT.value),
@@ -390,8 +403,8 @@
             return "\\v";
         }
         var k = i + 1;
-        var empty3 = k < l && s[k] >= "0" && s[k] <= "9" ? "\\&" : "";
-        return "\\" + c.charCodeAt(0).toString(10) + empty3;
+        var empty4 = k < l && s[k] >= "0" && s[k] <= "9" ? "\\&" : "";
+        return "\\" + c.charCodeAt(0).toString(10) + empty4;
       }
     ) + '"';
   };
@@ -19334,6 +19347,22 @@
   var applySecond3 = /* @__PURE__ */ applySecond(applyParserT);
   var pure3 = /* @__PURE__ */ pure(applicativeParserT);
   var bind3 = /* @__PURE__ */ bind(bindParserT);
+  var takeWhile1 = function(predicate) {
+    return consumeWith(function(s) {
+      var value12 = takeWhile(predicate)(s);
+      var len = length3(value12);
+      var $27 = len > 0;
+      if ($27) {
+        return new Right({
+          consumed: value12,
+          remainder: drop(length3(value12))(s),
+          value: value12
+        });
+      }
+      ;
+      return new Left("Expected character satisfying predicate");
+    });
+  };
   var takeWhile4 = function(predicate) {
     return consumeWith(function(s) {
       var value12 = takeWhile(predicate)(s);
@@ -19508,6 +19537,30 @@
     };
     return Width2;
   }();
+  var Define = /* @__PURE__ */ function() {
+    function Define2(value0, value1) {
+      this.value0 = value0;
+      this.value1 = value1;
+    }
+    ;
+    Define2.create = function(value0) {
+      return function(value1) {
+        return new Define2(value0, value1);
+      };
+    };
+    return Define2;
+  }();
+  var Call = /* @__PURE__ */ function() {
+    function Call2(value0) {
+      this.value0 = value0;
+    }
+    ;
+    Call2.create = function(value0) {
+      return new Call2(value0);
+    };
+    return Call2;
+  }();
+  var parseIdentifier = /* @__PURE__ */ takeWhile1(isLetter);
   var showExpr = {
     show: function(v) {
       if (v instanceof Forward) {
@@ -19555,16 +19608,24 @@
       }
       ;
       if (v instanceof Repeat) {
-        return "repeat " + (show13(v.value0) + (" [" + ($lazy_joinExprs(48)(v.value1) + "]")));
+        return "repeat " + (show13(v.value0) + (" [" + ($lazy_joinExprs(50)(v.value1) + "]")));
       }
       ;
-      throw new Error("Failed pattern match at CommandParser (line 36, column 1 - line 48, column 74): " + [v.constructor.name]);
+      if (v instanceof Define) {
+        return "define " + (v.value0 + (" as [" + ($lazy_joinExprs(51)(v.value1) + "]")));
+      }
+      ;
+      if (v instanceof Call) {
+        return v.value0;
+      }
+      ;
+      throw new Error("Failed pattern match at CommandParser (line 38, column 1 - line 52, column 20): " + [v.constructor.name]);
     }
   };
   var $lazy_joinExprs = /* @__PURE__ */ $runtime_lazy4("joinExprs", "CommandParser", function() {
     var sep = function(s) {
-      var $26 = $$null2(s);
-      if ($26) {
+      var $29 = $$null2(s);
+      if ($29) {
         return "";
       }
       ;
@@ -19577,9 +19638,9 @@
     })("");
   });
   var command = /* @__PURE__ */ function() {
-    var $27 = map(functorArray)(string);
-    return function($28) {
-      return choice2($27($28));
+    var $30 = map(functorArray)(string);
+    return function($31) {
+      return choice2($30($31));
     };
   }();
   var commandWithInteger = function(ss) {
@@ -19591,27 +19652,484 @@
   var commandWithString = function(ss) {
     return applySecond4(applySecond4(command(ss))(skipSpaces))(takeWhile4(isLetter));
   };
+  var $lazy_parseDefine = /* @__PURE__ */ $runtime_lazy4("parseDefine", "CommandParser", function() {
+    return bind4(applyFirst2(string("define"))(whiteSpace))(function() {
+      return bind4(applyFirst2(parseIdentifier)(whiteSpace))(function(identifier) {
+        return bind4(applyFirst2(string("as"))(whiteSpace))(function() {
+          return bind4(applyFirst2(applySecond4($$char("["))($lazy_parseExprs(110)))($$char("]")))(function(exprs) {
+            return pure4(new Define(identifier, exprs));
+          });
+        });
+      });
+    });
+  });
   var $lazy_parseExpr = /* @__PURE__ */ $runtime_lazy4("parseExpr", "CommandParser", function() {
     return defer3(function(v) {
-      return asErrorMessage("command")(choice2([map5(Forward.create)(commandWithNum(["forward", "fd"])), map5(TurnLeft.create)(commandWithNum(["left", "lt"])), map5(TurnRight.create)(commandWithNum(["right", "rt"])), voidRight2(Clear.value)(string("clear")), voidRight2(Hide.value)(string("hide")), voidRight2(Show.value)(string("show")), map5(Background.create)(commandWithString(["background", "bg"])), voidRight2(PenUp.value)(command(["penup", "pu"])), voidRight2(PenDown.value)(command(["pendown", "pd"])), map5(Color.create)(commandWithString(["color"])), map5(Width.create)(commandWithInteger(["width"])), $lazy_parseRepeat(77)]));
+      return asErrorMessage("command")(choice2([map5(Forward.create)(commandWithNum(["forward", "fd"])), map5(TurnLeft.create)(commandWithNum(["left", "lt"])), map5(TurnRight.create)(commandWithNum(["right", "rt"])), voidRight2(Clear.value)(string("clear")), voidRight2(Hide.value)(string("hide")), voidRight2(Show.value)(string("show")), map5(Background.create)(commandWithString(["background", "bg"])), voidRight2(PenUp.value)(command(["penup", "pu"])), voidRight2(PenDown.value)(command(["pendown", "pd"])), map5(Color.create)(commandWithString(["color"])), map5(Width.create)(commandWithInteger(["width"])), $lazy_parseRepeat(81), $lazy_parseDefine(82), map5(Call.create)(parseIdentifier)]));
     });
   });
   var $lazy_parseExprs = /* @__PURE__ */ $runtime_lazy4("parseExprs", "CommandParser", function() {
     return defer3(function(v) {
-      return sepBy($lazy_parseExpr(59))(whiteSpace);
+      return sepBy($lazy_parseExpr(63))(whiteSpace);
     });
   });
   var $lazy_parseRepeat = /* @__PURE__ */ $runtime_lazy4("parseRepeat", "CommandParser", function() {
-    return bind4(applySecond4(string("repeat"))(whiteSpace))(function() {
+    return bind4(applyFirst2(string("repeat"))(whiteSpace))(function() {
       return bind4(applyFirst2(intDecimal)(skipSpaces))(function(count) {
-        return bind4(applyFirst2(applySecond4($$char("["))($lazy_parseExprs(93)))($$char("]")))(function(exprs) {
+        return bind4(applyFirst2(applySecond4($$char("["))($lazy_parseExprs(102)))($$char("]")))(function(exprs) {
           return pure4(new Repeat(count, exprs));
         });
       });
     });
   });
-  var parseExprs = /* @__PURE__ */ $lazy_parseExprs(58);
+  var parseExprs = /* @__PURE__ */ $lazy_parseExprs(62);
   var parse = /* @__PURE__ */ flip(runParser)(parseExprs);
+
+  // output/Data.Map.Internal/index.js
+  var Leaf = /* @__PURE__ */ function() {
+    function Leaf2() {
+    }
+    ;
+    Leaf2.value = new Leaf2();
+    return Leaf2;
+  }();
+  var Two = /* @__PURE__ */ function() {
+    function Two2(value0, value1, value22, value32) {
+      this.value0 = value0;
+      this.value1 = value1;
+      this.value2 = value22;
+      this.value3 = value32;
+    }
+    ;
+    Two2.create = function(value0) {
+      return function(value1) {
+        return function(value22) {
+          return function(value32) {
+            return new Two2(value0, value1, value22, value32);
+          };
+        };
+      };
+    };
+    return Two2;
+  }();
+  var Three = /* @__PURE__ */ function() {
+    function Three2(value0, value1, value22, value32, value42, value52, value62) {
+      this.value0 = value0;
+      this.value1 = value1;
+      this.value2 = value22;
+      this.value3 = value32;
+      this.value4 = value42;
+      this.value5 = value52;
+      this.value6 = value62;
+    }
+    ;
+    Three2.create = function(value0) {
+      return function(value1) {
+        return function(value22) {
+          return function(value32) {
+            return function(value42) {
+              return function(value52) {
+                return function(value62) {
+                  return new Three2(value0, value1, value22, value32, value42, value52, value62);
+                };
+              };
+            };
+          };
+        };
+      };
+    };
+    return Three2;
+  }();
+  var TwoLeft = /* @__PURE__ */ function() {
+    function TwoLeft2(value0, value1, value22) {
+      this.value0 = value0;
+      this.value1 = value1;
+      this.value2 = value22;
+    }
+    ;
+    TwoLeft2.create = function(value0) {
+      return function(value1) {
+        return function(value22) {
+          return new TwoLeft2(value0, value1, value22);
+        };
+      };
+    };
+    return TwoLeft2;
+  }();
+  var TwoRight = /* @__PURE__ */ function() {
+    function TwoRight2(value0, value1, value22) {
+      this.value0 = value0;
+      this.value1 = value1;
+      this.value2 = value22;
+    }
+    ;
+    TwoRight2.create = function(value0) {
+      return function(value1) {
+        return function(value22) {
+          return new TwoRight2(value0, value1, value22);
+        };
+      };
+    };
+    return TwoRight2;
+  }();
+  var ThreeLeft = /* @__PURE__ */ function() {
+    function ThreeLeft2(value0, value1, value22, value32, value42, value52) {
+      this.value0 = value0;
+      this.value1 = value1;
+      this.value2 = value22;
+      this.value3 = value32;
+      this.value4 = value42;
+      this.value5 = value52;
+    }
+    ;
+    ThreeLeft2.create = function(value0) {
+      return function(value1) {
+        return function(value22) {
+          return function(value32) {
+            return function(value42) {
+              return function(value52) {
+                return new ThreeLeft2(value0, value1, value22, value32, value42, value52);
+              };
+            };
+          };
+        };
+      };
+    };
+    return ThreeLeft2;
+  }();
+  var ThreeMiddle = /* @__PURE__ */ function() {
+    function ThreeMiddle2(value0, value1, value22, value32, value42, value52) {
+      this.value0 = value0;
+      this.value1 = value1;
+      this.value2 = value22;
+      this.value3 = value32;
+      this.value4 = value42;
+      this.value5 = value52;
+    }
+    ;
+    ThreeMiddle2.create = function(value0) {
+      return function(value1) {
+        return function(value22) {
+          return function(value32) {
+            return function(value42) {
+              return function(value52) {
+                return new ThreeMiddle2(value0, value1, value22, value32, value42, value52);
+              };
+            };
+          };
+        };
+      };
+    };
+    return ThreeMiddle2;
+  }();
+  var ThreeRight = /* @__PURE__ */ function() {
+    function ThreeRight2(value0, value1, value22, value32, value42, value52) {
+      this.value0 = value0;
+      this.value1 = value1;
+      this.value2 = value22;
+      this.value3 = value32;
+      this.value4 = value42;
+      this.value5 = value52;
+    }
+    ;
+    ThreeRight2.create = function(value0) {
+      return function(value1) {
+        return function(value22) {
+          return function(value32) {
+            return function(value42) {
+              return function(value52) {
+                return new ThreeRight2(value0, value1, value22, value32, value42, value52);
+              };
+            };
+          };
+        };
+      };
+    };
+    return ThreeRight2;
+  }();
+  var KickUp = /* @__PURE__ */ function() {
+    function KickUp2(value0, value1, value22, value32) {
+      this.value0 = value0;
+      this.value1 = value1;
+      this.value2 = value22;
+      this.value3 = value32;
+    }
+    ;
+    KickUp2.create = function(value0) {
+      return function(value1) {
+        return function(value22) {
+          return function(value32) {
+            return new KickUp2(value0, value1, value22, value32);
+          };
+        };
+      };
+    };
+    return KickUp2;
+  }();
+  var lookup = function(dictOrd) {
+    var compare3 = compare(dictOrd);
+    return function(k) {
+      var go2 = function($copy_v) {
+        var $tco_done = false;
+        var $tco_result;
+        function $tco_loop(v) {
+          if (v instanceof Leaf) {
+            $tco_done = true;
+            return Nothing.value;
+          }
+          ;
+          if (v instanceof Two) {
+            var v2 = compare3(k)(v.value1);
+            if (v2 instanceof EQ) {
+              $tco_done = true;
+              return new Just(v.value2);
+            }
+            ;
+            if (v2 instanceof LT) {
+              $copy_v = v.value0;
+              return;
+            }
+            ;
+            $copy_v = v.value3;
+            return;
+          }
+          ;
+          if (v instanceof Three) {
+            var v3 = compare3(k)(v.value1);
+            if (v3 instanceof EQ) {
+              $tco_done = true;
+              return new Just(v.value2);
+            }
+            ;
+            var v4 = compare3(k)(v.value4);
+            if (v4 instanceof EQ) {
+              $tco_done = true;
+              return new Just(v.value5);
+            }
+            ;
+            if (v3 instanceof LT) {
+              $copy_v = v.value0;
+              return;
+            }
+            ;
+            if (v4 instanceof GT) {
+              $copy_v = v.value6;
+              return;
+            }
+            ;
+            $copy_v = v.value3;
+            return;
+          }
+          ;
+          throw new Error("Failed pattern match at Data.Map.Internal (line 241, column 5 - line 241, column 22): " + [v.constructor.name]);
+        }
+        ;
+        while (!$tco_done) {
+          $tco_result = $tco_loop($copy_v);
+        }
+        ;
+        return $tco_result;
+      };
+      return go2;
+    };
+  };
+  var fromZipper = function($copy_dictOrd) {
+    return function($copy_v) {
+      return function($copy_v1) {
+        var $tco_var_dictOrd = $copy_dictOrd;
+        var $tco_var_v = $copy_v;
+        var $tco_done = false;
+        var $tco_result;
+        function $tco_loop(dictOrd, v, v1) {
+          if (v instanceof Nil) {
+            $tco_done = true;
+            return v1;
+          }
+          ;
+          if (v instanceof Cons) {
+            if (v.value0 instanceof TwoLeft) {
+              $tco_var_dictOrd = dictOrd;
+              $tco_var_v = v.value1;
+              $copy_v1 = new Two(v1, v.value0.value0, v.value0.value1, v.value0.value2);
+              return;
+            }
+            ;
+            if (v.value0 instanceof TwoRight) {
+              $tco_var_dictOrd = dictOrd;
+              $tco_var_v = v.value1;
+              $copy_v1 = new Two(v.value0.value0, v.value0.value1, v.value0.value2, v1);
+              return;
+            }
+            ;
+            if (v.value0 instanceof ThreeLeft) {
+              $tco_var_dictOrd = dictOrd;
+              $tco_var_v = v.value1;
+              $copy_v1 = new Three(v1, v.value0.value0, v.value0.value1, v.value0.value2, v.value0.value3, v.value0.value4, v.value0.value5);
+              return;
+            }
+            ;
+            if (v.value0 instanceof ThreeMiddle) {
+              $tco_var_dictOrd = dictOrd;
+              $tco_var_v = v.value1;
+              $copy_v1 = new Three(v.value0.value0, v.value0.value1, v.value0.value2, v1, v.value0.value3, v.value0.value4, v.value0.value5);
+              return;
+            }
+            ;
+            if (v.value0 instanceof ThreeRight) {
+              $tco_var_dictOrd = dictOrd;
+              $tco_var_v = v.value1;
+              $copy_v1 = new Three(v.value0.value0, v.value0.value1, v.value0.value2, v.value0.value3, v.value0.value4, v.value0.value5, v1);
+              return;
+            }
+            ;
+            throw new Error("Failed pattern match at Data.Map.Internal (line 462, column 3 - line 467, column 88): " + [v.value0.constructor.name]);
+          }
+          ;
+          throw new Error("Failed pattern match at Data.Map.Internal (line 459, column 1 - line 459, column 80): " + [v.constructor.name, v1.constructor.name]);
+        }
+        ;
+        while (!$tco_done) {
+          $tco_result = $tco_loop($tco_var_dictOrd, $tco_var_v, $copy_v1);
+        }
+        ;
+        return $tco_result;
+      };
+    };
+  };
+  var insert2 = function(dictOrd) {
+    var fromZipper1 = fromZipper(dictOrd);
+    var compare3 = compare(dictOrd);
+    return function(k) {
+      return function(v) {
+        var up = function($copy_v1) {
+          return function($copy_v2) {
+            var $tco_var_v1 = $copy_v1;
+            var $tco_done = false;
+            var $tco_result;
+            function $tco_loop(v1, v2) {
+              if (v1 instanceof Nil) {
+                $tco_done = true;
+                return new Two(v2.value0, v2.value1, v2.value2, v2.value3);
+              }
+              ;
+              if (v1 instanceof Cons) {
+                if (v1.value0 instanceof TwoLeft) {
+                  $tco_done = true;
+                  return fromZipper1(v1.value1)(new Three(v2.value0, v2.value1, v2.value2, v2.value3, v1.value0.value0, v1.value0.value1, v1.value0.value2));
+                }
+                ;
+                if (v1.value0 instanceof TwoRight) {
+                  $tco_done = true;
+                  return fromZipper1(v1.value1)(new Three(v1.value0.value0, v1.value0.value1, v1.value0.value2, v2.value0, v2.value1, v2.value2, v2.value3));
+                }
+                ;
+                if (v1.value0 instanceof ThreeLeft) {
+                  $tco_var_v1 = v1.value1;
+                  $copy_v2 = new KickUp(new Two(v2.value0, v2.value1, v2.value2, v2.value3), v1.value0.value0, v1.value0.value1, new Two(v1.value0.value2, v1.value0.value3, v1.value0.value4, v1.value0.value5));
+                  return;
+                }
+                ;
+                if (v1.value0 instanceof ThreeMiddle) {
+                  $tco_var_v1 = v1.value1;
+                  $copy_v2 = new KickUp(new Two(v1.value0.value0, v1.value0.value1, v1.value0.value2, v2.value0), v2.value1, v2.value2, new Two(v2.value3, v1.value0.value3, v1.value0.value4, v1.value0.value5));
+                  return;
+                }
+                ;
+                if (v1.value0 instanceof ThreeRight) {
+                  $tco_var_v1 = v1.value1;
+                  $copy_v2 = new KickUp(new Two(v1.value0.value0, v1.value0.value1, v1.value0.value2, v1.value0.value3), v1.value0.value4, v1.value0.value5, new Two(v2.value0, v2.value1, v2.value2, v2.value3));
+                  return;
+                }
+                ;
+                throw new Error("Failed pattern match at Data.Map.Internal (line 498, column 5 - line 503, column 108): " + [v1.value0.constructor.name, v2.constructor.name]);
+              }
+              ;
+              throw new Error("Failed pattern match at Data.Map.Internal (line 495, column 3 - line 495, column 56): " + [v1.constructor.name, v2.constructor.name]);
+            }
+            ;
+            while (!$tco_done) {
+              $tco_result = $tco_loop($tco_var_v1, $copy_v2);
+            }
+            ;
+            return $tco_result;
+          };
+        };
+        var down = function($copy_v1) {
+          return function($copy_v2) {
+            var $tco_var_v1 = $copy_v1;
+            var $tco_done1 = false;
+            var $tco_result;
+            function $tco_loop(v1, v2) {
+              if (v2 instanceof Leaf) {
+                $tco_done1 = true;
+                return up(v1)(new KickUp(Leaf.value, k, v, Leaf.value));
+              }
+              ;
+              if (v2 instanceof Two) {
+                var v3 = compare3(k)(v2.value1);
+                if (v3 instanceof EQ) {
+                  $tco_done1 = true;
+                  return fromZipper1(v1)(new Two(v2.value0, k, v, v2.value3));
+                }
+                ;
+                if (v3 instanceof LT) {
+                  $tco_var_v1 = new Cons(new TwoLeft(v2.value1, v2.value2, v2.value3), v1);
+                  $copy_v2 = v2.value0;
+                  return;
+                }
+                ;
+                $tco_var_v1 = new Cons(new TwoRight(v2.value0, v2.value1, v2.value2), v1);
+                $copy_v2 = v2.value3;
+                return;
+              }
+              ;
+              if (v2 instanceof Three) {
+                var v3 = compare3(k)(v2.value1);
+                if (v3 instanceof EQ) {
+                  $tco_done1 = true;
+                  return fromZipper1(v1)(new Three(v2.value0, k, v, v2.value3, v2.value4, v2.value5, v2.value6));
+                }
+                ;
+                var v4 = compare3(k)(v2.value4);
+                if (v4 instanceof EQ) {
+                  $tco_done1 = true;
+                  return fromZipper1(v1)(new Three(v2.value0, v2.value1, v2.value2, v2.value3, k, v, v2.value6));
+                }
+                ;
+                if (v3 instanceof LT) {
+                  $tco_var_v1 = new Cons(new ThreeLeft(v2.value1, v2.value2, v2.value3, v2.value4, v2.value5, v2.value6), v1);
+                  $copy_v2 = v2.value0;
+                  return;
+                }
+                ;
+                if (v3 instanceof GT && v4 instanceof LT) {
+                  $tco_var_v1 = new Cons(new ThreeMiddle(v2.value0, v2.value1, v2.value2, v2.value4, v2.value5, v2.value6), v1);
+                  $copy_v2 = v2.value3;
+                  return;
+                }
+                ;
+                $tco_var_v1 = new Cons(new ThreeRight(v2.value0, v2.value1, v2.value2, v2.value3, v2.value4, v2.value5), v1);
+                $copy_v2 = v2.value6;
+                return;
+              }
+              ;
+              throw new Error("Failed pattern match at Data.Map.Internal (line 478, column 3 - line 478, column 55): " + [v1.constructor.name, v2.constructor.name]);
+            }
+            ;
+            while (!$tco_done1) {
+              $tco_result = $tco_loop($tco_var_v1, $copy_v2);
+            }
+            ;
+            return $tco_result;
+          };
+        };
+        return down(Nil.value);
+      };
+    };
+  };
+  var empty3 = /* @__PURE__ */ function() {
+    return Leaf.value;
+  }();
 
   // output/Graphics.Canvas/foreign.js
   function getCanvasElementByIdImpl(id2, Just2, Nothing2) {
@@ -19948,8 +20466,10 @@
   var bind5 = /* @__PURE__ */ bind(bindEffect);
   var map7 = /* @__PURE__ */ map(functorEffect);
   var bindFlipped3 = /* @__PURE__ */ bindFlipped(bindEffect);
+  var insert3 = /* @__PURE__ */ insert2(ordString);
   var show4 = /* @__PURE__ */ show(showExpr);
   var foldM3 = /* @__PURE__ */ foldM(monadEffect);
+  var lookup2 = /* @__PURE__ */ lookup(ordString);
   var traverse_2 = /* @__PURE__ */ traverse_(applicativeEffect)(foldableArray);
   var show14 = /* @__PURE__ */ show(showParseError);
   var setVisible = function(w) {
@@ -19964,7 +20484,8 @@
           width: w.turtle.width
         },
         bg: w.bg,
-        lines: w.lines
+        lines: w.lines,
+        definitions: w.definitions
       };
     };
   };
@@ -19988,6 +20509,7 @@
       return pure5({
         turtle: turnTurtle(w.turtle)(n),
         bg: w.bg,
+        definitions: w.definitions,
         lines: w.lines
       });
     };
@@ -20024,7 +20546,7 @@
           return maybeElem.value0;
         }
         ;
-        throw new Error("Failed pattern match at Main (line 231, column 3 - line 233, column 21): " + [maybeElem.constructor.name]);
+        throw new Error("Failed pattern match at Main (line 253, column 3 - line 255, column 21): " + [maybeElem.constructor.name]);
       };
     };
   };
@@ -20053,7 +20575,7 @@
         return v.value0;
       }
       ;
-      throw new Error("Failed pattern match at Main (line 208, column 12 - line 210, column 21): " + [v.constructor.name]);
+      throw new Error("Failed pattern match at Main (line 230, column 12 - line 232, column 21): " + [v.constructor.name]);
     }();
     var outputElem = mustFindElem("output")(doc)();
     var out = function() {
@@ -20066,7 +20588,7 @@
         return v.value0;
       }
       ;
-      throw new Error("Failed pattern match at Main (line 212, column 10 - line 214, column 21): " + [v.constructor.name]);
+      throw new Error("Failed pattern match at Main (line 234, column 10 - line 236, column 21): " + [v.constructor.name]);
     }();
     var maybeCanvas = getCanvasElementById("canvas")();
     var canvas = function() {
@@ -20078,7 +20600,7 @@
         return maybeCanvas.value0;
       }
       ;
-      throw new Error("Failed pattern match at Main (line 216, column 13 - line 218, column 21): " + [maybeCanvas.constructor.name]);
+      throw new Error("Failed pattern match at Main (line 238, column 13 - line 240, column 21): " + [maybeCanvas.constructor.name]);
     }();
     var ctx = getContext2D(canvas)();
     return {
@@ -20119,14 +20641,15 @@
               return ls;
             }
             ;
-            throw new Error("Failed pattern match at Main (line 100, column 3 - line 100, column 58): " + [ls.constructor.name, v.constructor.name, distance.constructor.name]);
+            throw new Error("Failed pattern match at Main (line 105, column 3 - line 105, column 58): " + [ls.constructor.name, v.constructor.name, distance.constructor.name]);
           };
         };
       };
       return pure5({
         turtle: move(w.turtle)(n),
         lines: addLine(w.lines)(w.turtle)(n),
-        bg: w.bg
+        bg: w.bg,
+        definitions: w.definitions
       });
     };
   };
@@ -20153,8 +20676,27 @@
       return {
         turtle,
         bg: "white",
-        lines: []
+        lines: [],
+        definitions: empty3
       };
+    };
+  };
+  var evalDefine = function(ident) {
+    return function(exprs) {
+      return function(w) {
+        var d$prime = insert3(ident)(exprs)(w.definitions);
+        return pure5({
+          definitions: d$prime,
+          bg: w.bg,
+          lines: w.lines,
+          turtle: w.turtle
+        });
+      };
+    };
+  };
+  var error2 = function(doc) {
+    return function(s) {
+      return output(doc)("!!! " + s);
     };
   };
   var evalRepeatedly = function(c) {
@@ -20169,7 +20711,7 @@
             return bind5(evalCommands(doc)(commands)(w))(evalRepeatedly(c - 1 | 0)(doc)(commands));
           }
           ;
-          throw new Error("Failed pattern match at Main (line 193, column 1 - line 193, column 67): " + [c.constructor.name, doc.constructor.name, commands.constructor.name, w.constructor.name]);
+          throw new Error("Failed pattern match at Main (line 202, column 1 - line 202, column 67): " + [c.constructor.name, doc.constructor.name, commands.constructor.name, w.constructor.name]);
         };
       };
     };
@@ -20193,7 +20735,26 @@
           return foldM3(go2)(w)(commands);
         }
         ;
-        throw new Error("Failed pattern match at Main (line 158, column 1 - line 158, column 58): " + [doc.constructor.name, commands.constructor.name, w.constructor.name]);
+        throw new Error("Failed pattern match at Main (line 163, column 1 - line 163, column 58): " + [doc.constructor.name, commands.constructor.name, w.constructor.name]);
+      };
+    };
+  };
+  var evalCall = function(doc) {
+    return function(ident) {
+      return function(w) {
+        var v = lookup2(ident)(w.definitions);
+        if (v instanceof Nothing) {
+          return function __do3() {
+            error2(doc)("unrecognised command " + ident)();
+            return w;
+          };
+        }
+        ;
+        if (v instanceof Just) {
+          return evalCommands(doc)(v.value0)(w);
+        }
+        ;
+        throw new Error("Failed pattern match at Main (line 214, column 3 - line 218, column 49): " + [v.constructor.name]);
       };
     };
   };
@@ -20219,6 +20780,7 @@
         if (v1 instanceof Background) {
           return pure5({
             bg: v1.value0,
+            definitions: v2.definitions,
             lines: v2.lines,
             turtle: v2.turtle
           });
@@ -20243,6 +20805,7 @@
               width: v2.turtle.width
             },
             bg: v2.bg,
+            definitions: v2.definitions,
             lines: v2.lines
           });
         }
@@ -20258,6 +20821,7 @@
               width: v2.turtle.width
             },
             bg: v2.bg,
+            definitions: v2.definitions,
             lines: v2.lines
           });
         }
@@ -20273,6 +20837,7 @@
               width: v2.turtle.width
             },
             bg: v2.bg,
+            definitions: v2.definitions,
             lines: v2.lines
           });
         }
@@ -20288,6 +20853,7 @@
               visible: v2.turtle.visible
             },
             bg: v2.bg,
+            definitions: v2.definitions,
             lines: v2.lines
           });
         }
@@ -20296,7 +20862,15 @@
           return evalRepeatedly(v1.value0)(v)(v1.value1)(v2);
         }
         ;
-        throw new Error("Failed pattern match at Main (line 168, column 1 - line 168, column 45): " + [v.constructor.name, v1.constructor.name, v2.constructor.name]);
+        if (v1 instanceof Define) {
+          return evalDefine(v1.value0)(v1.value1)(v2);
+        }
+        ;
+        if (v1 instanceof Call) {
+          return evalCall(v)(v1.value0)(v2);
+        }
+        ;
+        throw new Error("Failed pattern match at Main (line 173, column 1 - line 173, column 45): " + [v.constructor.name, v1.constructor.name, v2.constructor.name]);
       };
     };
   };
@@ -20368,7 +20942,7 @@
           setValue3("")(doc.input)();
           var v2 = parse(v1);
           if (v2 instanceof Left) {
-            return output(doc)("!!! " + show14(v2.value0))();
+            return error2(doc)(show14(v2.value0))();
           }
           ;
           if (v2 instanceof Right) {
@@ -20377,7 +20951,7 @@
             return render(doc)(w$prime)();
           }
           ;
-          throw new Error("Failed pattern match at Main (line 151, column 3 - line 156, column 20): " + [v2.constructor.name]);
+          throw new Error("Failed pattern match at Main (line 156, column 3 - line 161, column 20): " + [v2.constructor.name]);
         };
       };
     };

@@ -9,12 +9,12 @@ import Data.CodePoint.Unicode (isLetter)
 import Data.Either (Either)
 import Data.List (List)
 import Data.List as L
+import Data.String as S
 import Parsing (ParseError, runParser)
 import Parsing as P
 import Parsing.Combinators (asErrorMessage, choice, sepBy)
 import Parsing.String (char, string)
-import Parsing.String.Basic (intDecimal, number, skipSpaces, takeWhile, whiteSpace)
-import Data.String as S
+import Parsing.String.Basic (intDecimal, number, skipSpaces, takeWhile, takeWhile1, whiteSpace)
 
 type Parser
   = P.Parser String
@@ -32,6 +32,8 @@ data Expr
   | PenDown
   | Color String
   | Width Int
+  | Define String (List Expr)
+  | Call String
 
 instance showExpr :: Show Expr where
   show (Forward x) = "forward " <> show x
@@ -46,6 +48,8 @@ instance showExpr :: Show Expr where
   show (Color x) = "color " <> x
   show (Width x) = "width " <> show x
   show (Repeat x es) = "repeat " <> show x <> " [" <> joinExprs es <> "]"
+  show (Define x es) = "define " <> x <> " as [" <> joinExprs es <> "]"
+  show (Call x) = x
 
 joinExprs :: List Expr -> String
 joinExprs = L.foldl (\acc e -> acc <> sep acc <> show e) ""
@@ -75,6 +79,8 @@ parseExpr =
           , Color <$> commandWithString [ "color" ]
           , Width <$> commandWithInteger [ "width" ]
           , parseRepeat
+          , parseDefine
+          , Call <$> parseIdentifier
           ]
 
 commandWithNum :: Array String -> Parser Number
@@ -86,12 +92,23 @@ commandWithInteger ss = command ss *> skipSpaces *> intDecimal
 commandWithString :: Array String -> Parser String
 commandWithString ss = command ss *> skipSpaces *> takeWhile isLetter
 
+command :: Array String -> Parser String
+command = choice <<< map string
+
 parseRepeat :: Parser Expr
 parseRepeat = do
-  _ <- string "repeat" *> whiteSpace
+  _ <- string "repeat" <* whiteSpace
   count <- intDecimal <* skipSpaces
   exprs <- (char '[') *> parseExprs <* (char ']')
   pure $ Repeat count exprs
 
-command :: Array String -> Parser String
-command = choice <<< map string
+parseDefine :: Parser Expr
+parseDefine = do
+  _ <- string "define" <* whiteSpace
+  identifier <- parseIdentifier <* whiteSpace
+  _ <- string "as" <* whiteSpace
+  exprs <- (char '[') *> parseExprs <* (char ']')
+  pure $ Define identifier exprs
+
+parseIdentifier :: Parser String
+parseIdentifier = takeWhile1 isLetter

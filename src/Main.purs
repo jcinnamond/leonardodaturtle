@@ -8,10 +8,11 @@ import Data.Foldable (traverse_)
 import Data.Int (toNumber)
 import Data.List (List)
 import Data.List as L
+import Data.Map (Map)
+import Data.Map as M
 import Data.Maybe (Maybe(..))
 import Data.Number (cos, pi, sin)
 import Effect (Effect)
-import Effect.Console (log)
 import Effect.Exception (throw)
 import Effect.Ref (Ref)
 import Effect.Ref as Ref
@@ -47,6 +48,7 @@ type World
   = { turtle :: Turtle
     , bg :: String
     , lines :: Array Line
+    , definitions :: Definitions
     }
 
 type Turtle
@@ -57,6 +59,9 @@ type Turtle
     , color :: String
     , width :: Int
     }
+
+type Definitions
+  = Map String (List Expr)
 
 type Point
   = { x :: Number, y :: Number }
@@ -136,8 +141,8 @@ render doc w = do
       setFillStyle doc.canvasCtx w.bg
       fillRect doc.canvasCtx { x: 0.0, y: 0.0, width: width, height: height }
 
-error :: String -> Effect Unit
-error = log
+error :: Doc -> String -> Effect Unit
+error doc s = output doc $ "!!! " <> s
 
 output :: Doc -> String -> Effect Unit
 output doc s = do
@@ -149,7 +154,7 @@ handleCommand wr doc _ = do
   v <- value doc.input
   setValue "" doc.input
   case parse v of
-    Left err -> output doc $ "!!! " <> show err
+    Left err -> error doc $ show err
     Right commands -> do
       w' <- evalCommands doc commands =<< Ref.read wr
       Ref.write w' wr
@@ -190,10 +195,27 @@ eval _ (Width n) w = pure $ w { turtle { width = n } }
 
 eval doc (Repeat c exprs) w = evalRepeatedly c doc exprs w
 
+eval _ (Define ident exprs) w = evalDefine ident exprs w
+
+eval doc (Call ident) w = evalCall doc ident w
+
 evalRepeatedly :: Int -> Doc -> List Expr -> World -> Effect World
 evalRepeatedly c doc commands w
   | c < 1 = pure w
   | otherwise = evalCommands doc commands w >>= evalRepeatedly (c - 1) doc commands
+
+evalDefine :: String -> List Expr -> World -> Effect World
+evalDefine ident exprs w = pure $ w { definitions = d' }
+  where
+  d' = M.insert ident exprs w.definitions
+
+evalCall :: Doc -> String -> World -> Effect World
+evalCall doc ident w = do
+  case M.lookup ident w.definitions of
+    Nothing -> do
+      error doc ("unrecognised command " <> ident)
+      pure w
+    Just commands -> evalCommands doc commands w
 
 listenToCommands :: Ref.Ref World -> Doc -> Effect Unit
 listenToCommands tr doc = do
@@ -248,7 +270,7 @@ initialTurtle canvas = do
 initialWorld :: Doc -> Effect World
 initialWorld doc = do
   turtle <- initialTurtle doc.canvas
-  pure { turtle: turtle, bg: "white", lines: [] }
+  pure { turtle: turtle, bg: "white", lines: [], definitions: M.empty }
 
 resizeCanvas :: Doc -> Effect Unit
 resizeCanvas doc = do

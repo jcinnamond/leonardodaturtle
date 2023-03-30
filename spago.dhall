@@ -12,6 +12,7 @@
   , "lists"
   , "maybe"
   , "numbers"
+  , "ordered-collections"
   , "parsing"
   , "prelude"
   , "refs"
