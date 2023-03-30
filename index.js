@@ -20708,7 +20708,7 @@
           }
           ;
           if (otherwise) {
-            return bind5(evalCommands(doc)(commands)(w))(evalRepeatedly(c - 1 | 0)(doc)(commands));
+            return bind5(evalCommands(false)(doc)(commands)(w))(evalRepeatedly(c - 1 | 0)(doc)(commands));
           }
           ;
           throw new Error("Failed pattern match at Main (line 202, column 1 - line 202, column 67): " + [c.constructor.name, doc.constructor.name, commands.constructor.name, w.constructor.name]);
@@ -20716,26 +20716,34 @@
       };
     };
   };
-  var evalCommands = function(doc) {
-    return function(commands) {
-      return function(w) {
-        if ($$null3(commands)) {
-          return pure5(w);
-        }
-        ;
-        if (otherwise) {
-          var go2 = function(w$prime) {
-            return function(e) {
-              return function __do3() {
-                output(doc)(show4(e))();
-                return $$eval(doc)(e)(w$prime)();
+  var evalCommands = function(showOutput) {
+    return function(doc) {
+      return function(commands) {
+        return function(w) {
+          if ($$null3(commands)) {
+            return pure5(w);
+          }
+          ;
+          if (otherwise) {
+            var go2 = function(w$prime) {
+              return function(e) {
+                return function __do3() {
+                  (function() {
+                    if (showOutput) {
+                      return output(doc)(show4(e))();
+                    }
+                    ;
+                    return unit;
+                  })();
+                  return $$eval(doc)(e)(w$prime)();
+                };
               };
             };
-          };
-          return foldM3(go2)(w)(commands);
-        }
-        ;
-        throw new Error("Failed pattern match at Main (line 163, column 1 - line 163, column 58): " + [doc.constructor.name, commands.constructor.name, w.constructor.name]);
+            return foldM3(go2)(w)(commands);
+          }
+          ;
+          throw new Error("Failed pattern match at Main (line 163, column 1 - line 163, column 69): " + [showOutput.constructor.name, doc.constructor.name, commands.constructor.name, w.constructor.name]);
+        };
       };
     };
   };
@@ -20751,10 +20759,10 @@
         }
         ;
         if (v instanceof Just) {
-          return evalCommands(doc)(v.value0)(w);
+          return evalCommands(false)(doc)(v.value0)(w);
         }
         ;
-        throw new Error("Failed pattern match at Main (line 214, column 3 - line 218, column 49): " + [v.constructor.name]);
+        throw new Error("Failed pattern match at Main (line 214, column 3 - line 218, column 55): " + [v.constructor.name]);
       };
     };
   };
@@ -20946,7 +20954,7 @@
           }
           ;
           if (v2 instanceof Right) {
-            var w$prime = bindFlipped3(evalCommands(doc)(v2.value0))(read(wr))();
+            var w$prime = bindFlipped3(evalCommands(true)(doc)(v2.value0))(read(wr))();
             write(w$prime)(wr)();
             return render(doc)(w$prime)();
           }

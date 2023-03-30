@@ -156,18 +156,18 @@ handleCommand wr doc _ = do
   case parse v of
     Left err -> error doc $ show err
     Right commands -> do
-      w' <- evalCommands doc commands =<< Ref.read wr
+      w' <- evalCommands true doc commands =<< Ref.read wr
       Ref.write w' wr
       render doc w'
 
-evalCommands :: Doc -> List Expr -> World -> Effect World
-evalCommands doc commands w
+evalCommands :: Boolean -> Doc -> List Expr -> World -> Effect World
+evalCommands showOutput doc commands w
   | L.null commands = pure w
   | otherwise = L.foldM go w commands
     where
     go :: World -> Expr -> Effect World
     go w' e = do
-      output doc $ show e
+      if showOutput then (output doc $ show e) else pure unit
       eval doc e w'
 
 eval :: Doc -> Expr -> World -> Effect World
@@ -202,7 +202,7 @@ eval doc (Call ident) w = evalCall doc ident w
 evalRepeatedly :: Int -> Doc -> List Expr -> World -> Effect World
 evalRepeatedly c doc commands w
   | c < 1 = pure w
-  | otherwise = evalCommands doc commands w >>= evalRepeatedly (c - 1) doc commands
+  | otherwise = evalCommands false doc commands w >>= evalRepeatedly (c - 1) doc commands
 
 evalDefine :: String -> List Expr -> World -> Effect World
 evalDefine ident exprs w = pure $ w { definitions = d' }
@@ -215,7 +215,7 @@ evalCall doc ident w = do
     Nothing -> do
       error doc ("unrecognised command " <> ident)
       pure w
-    Just commands -> evalCommands doc commands w
+    Just commands -> evalCommands false doc commands w
 
 listenToCommands :: Ref.Ref World -> Doc -> Effect Unit
 listenToCommands tr doc = do
