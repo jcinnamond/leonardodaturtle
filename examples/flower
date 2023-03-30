@@ -1,0 +1,4 @@
+background black
+color yellow
+repeat 8 [right 45.0 repeat 6 [repeat 90 [forward 2.0 right 2.0] right 90.0]]
+hide

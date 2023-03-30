@@ -1,0 +1,11 @@
+color goldenrod 
+width 2
+
+define stepup as [fd 20 rt 90 fd 20 lt 90]
+define stepdown as [fd 20 rt 90 fd 20 lt 90]
+
+repeat 15 [stepup]
+rt 90
+repeat 15 [stepdown]
+rt 180
+fd 600

@@ -1,0 +1,20 @@
+forward 100.0
+lt 45.0
+forward 100.0
+rt 135.0
+forward 150.0
+rt 135.0
+forward 100.0
+lt 45.0
+forward 100.0
+lt 90.0
+forward 30.0
+rt 90.0
+forward 3.0
+rt 90.0
+forward 68.0
+rt 90.0
+forward 3.0
+rt 90.0
+forward 30.0
+hide
