@@ -275,7 +275,7 @@ initialWorld doc = do
 resizeCanvas :: Doc -> Effect Unit
 resizeCanvas doc = do
   root <- toNonElementParentNode <$> (document =<< window)
-  e <- mustFindElem "canvas" root
+  e <- mustFindElem "canvas-container" root
   width <- clientWidth e
   height <- clientHeight e
   setCanvasWidth doc.canvas width

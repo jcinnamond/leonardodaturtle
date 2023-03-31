@@ -20553,7 +20553,7 @@
   var resizeCanvas = function(doc) {
     return function __do3() {
       var root = map7(toNonElementParentNode)(bindFlipped3(document2)(windowImpl))();
-      var e = mustFindElem("canvas")(root)();
+      var e = mustFindElem("canvas-container")(root)();
       var width8 = clientWidth(e)();
       var height8 = clientHeight(e)();
       setCanvasWidth(doc.canvas)(width8)();
