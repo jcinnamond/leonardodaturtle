@@ -16,21 +16,23 @@ import Effect (Effect)
 import Effect.Exception (throw)
 import Effect.Ref (Ref)
 import Effect.Ref as Ref
-import Graphics.Canvas (CanvasElement, Context2D, arc, clearRect, closePath, fillPath, fillRect, getCanvasElementById, getCanvasHeight, getCanvasWidth, getContext2D, lineTo, moveTo, setCanvasHeight, setCanvasWidth, setFillStyle, setLineWidth, setStrokeStyle, strokePath, withContext)
+import Graphics.Canvas (CanvasElement, Context2D, arc, clearRect, closePath, fillPath, fillRect, getCanvasDimensions, getCanvasElementById, getCanvasHeight, getCanvasWidth, getContext2D, getImageData, lineTo, moveTo, putImageData, setCanvasHeight, setCanvasWidth, setFillStyle, setLineWidth, setStrokeStyle, strokePath, withContext)
 import Web.DOM (Element, NonElementParentNode)
 import Web.DOM.Element (clientHeight, clientWidth, toEventTarget)
 import Web.DOM.NonElementParentNode (getElementById)
 import Web.Event.Event (Event, EventType(..))
 import Web.Event.EventTarget (addEventListener, eventListener)
-import Web.HTML (HTMLInputElement, HTMLTextAreaElement, window)
+import Web.HTML (HTMLInputElement, HTMLTextAreaElement, Window, window)
 import Web.HTML.HTMLDocument (toNonElementParentNode)
 import Web.HTML.HTMLInputElement (setValue, value)
 import Web.HTML.HTMLInputElement as InputElement
 import Web.HTML.HTMLTextAreaElement as TextAreaElement
 import Web.HTML.Window (document)
+import Web.HTML.Window as Window
 
 type Doc
-  = { form :: Element
+  = { window :: Window
+    , form :: Element
     , input :: HTMLInputElement
     , output :: HTMLTextAreaElement
     , canvas :: CanvasElement
@@ -222,9 +224,15 @@ listenToCommands tr doc = do
   listener <- eventListener $ handleCommand tr doc
   addEventListener (EventType "submit") listener false (toEventTarget doc.form)
 
+listenToResize :: Doc -> Effect Unit
+listenToResize doc = do
+  listener <- eventListener $ (\_ -> resizeCanvas doc)
+  addEventListener (EventType "resize") listener false (Window.toEventTarget doc.window)
+
 setupDoc :: Effect Doc
 setupDoc = do
-  doc <- toNonElementParentNode <$> (document =<< window)
+  win <- window
+  doc <- toNonElementParentNode <$> (document win)
   form <- mustFindElem "command-form" doc
   inputElem <- mustFindElem "command" doc
   input <- case InputElement.fromElement inputElem of
@@ -240,7 +248,8 @@ setupDoc = do
     Just c -> pure c
   ctx <- getContext2D canvas
   pure
-    $ { form: form
+    $ { window: win
+      , form: form
       , input: input
       , output: out
       , canvas: canvas
@@ -274,12 +283,21 @@ initialWorld doc = do
 
 resizeCanvas :: Doc -> Effect Unit
 resizeCanvas doc = do
+  -- remember the canvas contents
+  d <- getCanvasDimensions doc.canvas
+  content <- getImageData doc.canvasCtx 0.0 0.0 d.width d.height
+  -- Shrink the canvas to get an accurate size for the canvas container. This is
+  -- important when handling a resize that makes the window smaller.
+  setCanvasWidth doc.canvas 1.0
+  setCanvasHeight doc.canvas 1.0
+  -- Now work out what the real size should be.
   root <- toNonElementParentNode <$> (document =<< window)
   e <- mustFindElem "canvas-container" root
   width <- clientWidth e
   height <- clientHeight e
   setCanvasWidth doc.canvas width
   setCanvasHeight doc.canvas height
+  putImageData doc.canvasCtx content 0.0 0.0
   pure unit
 
 main :: Effect Unit
@@ -289,4 +307,5 @@ main = do
   world <- initialWorld doc
   wr <- Ref.new world
   render doc world
+  listenToResize doc
   listenToCommands wr doc
